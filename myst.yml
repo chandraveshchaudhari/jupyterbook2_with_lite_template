@@ -13,6 +13,7 @@ project:
   license:
     code: MIT
     content: CC-BY-4.0
+  # plugins: (disabled) - enable only after installing required Node dependencies
 
   # ---------------------------------------------------------------------------
   # Launch buttons
@@ -63,10 +64,10 @@ site:
       - _static/pyodide.css
 
     js:
-      - https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js
+      - _static/pyodide/pyodide.js
+      - _static/codemirror/init-codemirror.js
       - _static/pyodide-runner.js
+      - _static/pyodide-transform.js
 
-    myst:
-      plugins:
-        - ./extensions/markdown_code_to_pyodide.js
+    # myst: plugins removed temporarily to avoid build-time plugin errors
 

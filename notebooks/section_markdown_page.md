@@ -179,4 +179,12 @@ Make sure to enable execution if you want runnable notebooks.
 Use dropdowns to keep your content clean and organized.
 ```
 
+<link rel="stylesheet" href="/_static/pyodide.css">
+<script src="/_static/pyodide/pyodide.js"></script>
+<script src="/_static/codemirror/init-codemirror.js"></script>
+<script src="/_static/pyodide-runner.js"></script>
+<script src="/_static/pyodide-transform.js"></script>
 
+```python python_code_block
+print("Hello Pyodide")
+```

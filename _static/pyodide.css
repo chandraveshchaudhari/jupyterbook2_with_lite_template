@@ -1,41 +1,200 @@
+/* pyodide.css — responsive styling for interactive Pyodide cells */
 .pyodide-cell {
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  margin: 1rem 0;
-  background: #fafafa;
+  border: 1px solid rgba(30, 41, 59, 0.12);
+  border-radius: 0.8rem;
+  margin: 1.5rem 0;
+  overflow: hidden;
+  background: var(--jp-layout-color1, #ffffff);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
 }
 
-.pyodide-toolbar {
-  background: #f0f0f0;
-  padding: 6px;
-  border-bottom: 1px solid #ddd;
+.pyodide-cell-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  background: var(--jp-layout-color2, #f7f7f7);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
 }
 
-.pyodide-run,
-.pyodide-clear {
-  padding: 4px 12px;
-  margin-right: 5px;
+.pyodide-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.pyodide-actions button {
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: var(--jp-layout-color1, #ffffff);
+  color: var(--jp-ui-font-color0, #111827);
+  border-radius: 0.65rem;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.95rem;
   cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
 }
 
-.pyodide-input {
-  width: 100%;
-  height: 160px;
-  border: none;
+.pyodide-actions button:hover,
+.pyodide-actions button:focus-visible {
+  background: rgba(15, 23, 42, 0.05);
+  border-color: rgba(15, 23, 42, 0.18);
   outline: none;
-  padding: 10px;
-  font-family: monospace;
-  font-size: 14px;
+  transform: translateY(-1px);
+}
+
+.pyodide-editor-wrapper {
+  padding: 1rem;
+}
+
+.pyodide-editor,
+.CodeMirror {
+  width: 100%;
+  min-height: 180px;
+  max-height: 420px;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+
+.pyodide-editor {
+  display: block;
+  width: 100%;
+  padding: 0.95rem 1rem;
   resize: vertical;
   overflow: auto;
+  background: var(--jp-layout-color1, #ffffff);
+  color: var(--jp-ui-font-color0, #111827);
+}
+
+.CodeMirror {
+  background: var(--jp-layout-color1, #ffffff) !important;
+  color: var(--jp-ui-font-color0, #111827) !important;
+}
+
+.CodeMirror-scroll {
+  min-height: 180px;
+  max-height: 420px;
 }
 
 .pyodide-output {
-  border-top: 1px solid #ddd;
-  padding: 10px;
-  background: #fff;
-  max-height: 220px;
-  overflow-y: auto;
-  font-family: monospace;
+  background: var(--jp-layout-color1, #ffffff);
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  padding: 1rem;
+  max-height: 340px;
+  overflow: auto;
+}
+
+.pyodide-output-inner {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.pyodide-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+  color: var(--jp-ui-font-color2, #475569);
+}
+
+.pyodide-status {
+  font-weight: 600;
+}
+
+.pyodide-time {
+  opacity: 0.8;
+}
+
+.pyodide-spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(15, 23, 42, 0.15);
+  border-top-color: rgba(15, 23, 42, 0.65);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.pyodide-spinner.running {
+  opacity: 1;
+  animation: pyodide-spin 0.85s linear infinite;
+}
+
+@keyframes pyodide-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.py-stdout,
+.py-stderr,
+.py-exception,
+.py-result {
+  padding: 0.85rem 1rem;
+  border-radius: 0.65rem;
   white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.py-stdout {
+  background: #f3f9f0;
+  color: #164a25;
+}
+
+.py-stderr,
+.py-exception {
+  background: #fff3f3;
+  color: #7b1919;
+}
+
+.py-result {
+  background: #eef4ff;
+  color: #1b3a8a;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .pyodide-cell {
+    border-color: rgba(148, 163, 184, 0.20);
+    background: #0b1220;
+    box-shadow: 0 14px 45px rgba(15, 23, 42, 0.45);
+  }
+
+  .pyodide-cell-toolbar {
+    background: #111827;
+    border-bottom-color: rgba(148, 163, 184, 0.15);
+    color: #e2e8f0;
+  }
+
+  .pyodide-editor,
+  .CodeMirror {
+    background: #0f172a !important;
+    color: #e2e8f0 !important;
+    border-color: rgba(148, 163, 184, 0.20);
+  }
+
+  .pyodide-output {
+    background: #0b1220;
+    color: #cbd5e1;
+    border-top-color: rgba(148, 163, 184, 0.15);
+  }
+
+  .pyodide-actions button {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(148, 163, 184, 0.20);
+    color: #e2e8f0;
+  }
 }
