@@ -124,7 +124,7 @@ Then open `_build/html/index.html` in your browser.
 | **Run code in-page** | Click the ⚡ power button in the top toolbar to activate JupyterLite |
 | **Scrollable output** | Long outputs scroll automatically inside the cell |
 
-:::{html}
+```{raw} html
 <!-- Fullscreen floating button — available on every page that includes this script -->
 <button id="myst-fullscreen-btn" title="Toggle Fullscreen (F11)">⛶</button>
 <script>
@@ -146,4 +146,4 @@ Then open `_build/html/index.html` in your browser.
   update();
 })();
 </script>
-:::
+```
