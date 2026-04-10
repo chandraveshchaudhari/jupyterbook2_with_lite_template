@@ -7,9 +7,13 @@ on:
 
 permissions:
   contents: read
+  pages: write
+  id-token: write
 
-# Opt into Node.js 24 for JavaScript actions to avoid Node 20 deprecation issues
+# `BASE_URL` determines the site root; set per jupyter-book init recommendations
 env:
+  BASE_URL: /${{ github.event.repository.name }}
+  # Opt into Node.js 24 for JavaScript actions to avoid Node 20 deprecation issues
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 # Only one deployment at a time; cancel any in-flight job
