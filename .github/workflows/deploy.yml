@@ -8,6 +8,10 @@ on:
 permissions:
   contents: read
 
+# Opt into Node.js 24 for JavaScript actions to avoid Node 20 deprecation issues
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 # Only one deployment at a time; cancel any in-flight job
 concurrency:
   group: pages
@@ -28,10 +32,10 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Set up Node.js 20
+      - name: Set up Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
 
       - name: Install Jupyter Book (via myst)
         run: npm install -g jupyter-book
