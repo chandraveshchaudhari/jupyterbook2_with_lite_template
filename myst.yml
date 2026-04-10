@@ -53,7 +53,7 @@ site:
   template: book-theme
   options:
     logo: media/images/banner_image.png
-    # favicon: media/images/favicon.ico
+    favicon: media/images/banner_image.png
     folders: true          # generates clean /page/ URLs
     # logo_dark: media/images/banner_image_dark.png
     style: media/custom.css   # custom fonts, layout, fullscreen, scrollable output
