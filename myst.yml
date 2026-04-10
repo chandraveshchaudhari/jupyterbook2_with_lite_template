@@ -34,7 +34,7 @@ project:
   # ---------------------------------------------------------------------------
   # Banner image — referenced from project root (myst.yml location)
   # ---------------------------------------------------------------------------
-  banner: images/banner_image.png
+  banner: media/images/banner_image.png
 
   # ---------------------------------------------------------------------------
   # Table of Contents — controls site navigation
@@ -52,11 +52,11 @@ project:
 site:
   template: book-theme
   options:
-    logo: images/banner_image.png
-    # favicon: images/favicon.ico
+    logo: media/images/banner_image.png
+    # favicon: media/images/favicon.ico
     folders: true          # generates clean /page/ URLs
-    # logo_dark: images/banner_image_dark.png
+    # logo_dark: media/images/banner_image_dark.png
     style: media/custom.css   # custom fonts, layout, fullscreen, scrollable output
-    outline_maxdepth: 2          # right-side outline depth (keeps it concise)
+    # outline_maxdepth: 2          # right-side outline depth (keeps it concise)
     # hide_outline: true         # un-comment to fully hide the right outline
 
