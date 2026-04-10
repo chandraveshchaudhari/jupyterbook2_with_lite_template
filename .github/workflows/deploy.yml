@@ -37,12 +37,12 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Build Jupyter Book
-        run: jupyter book build
+        run: jupyter-book build
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: "./_build/site"
+          path: "./_build/html"
 
   # ------------------------------------------------------------------ #
   # JOB 2: Deploy to GitHub Pages
