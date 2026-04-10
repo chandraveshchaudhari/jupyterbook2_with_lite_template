@@ -1,0 +1,6 @@
+# JupyterBook v2 (MyST) — core build tool
+jupyter-book>=2.1.4
+
+# Used by extensions/auto_notebook_creation_using_toc.py
+nbformat>=5.10
+PyYAML>=6.0

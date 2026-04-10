@@ -1,0 +1,14 @@
+# MyST build outputs
+_build
+
+# Python virtual environment
+.venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+__pycache__/

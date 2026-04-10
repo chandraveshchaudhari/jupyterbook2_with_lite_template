@@ -1,0 +1,62 @@
+# See docs at: https://mystmd.org/guide/frontmatter
+version: 1
+
+project:
+  id: 5eae42df-5f18-4619-b9d9-8a56f17a08be
+  title: JupyterBook v2 + JupyterLite Template
+  description: A template for publishing notebook-based docs using Jupyter Book v2 (MyST) with JupyterLite support
+  keywords: [jupyter, jupyterbook, mystmd, jupyterlite, template, pyodide]
+  authors:
+    - name: Chandravesh Chaudhari
+      github: chandraveshchaudhari
+  github: https://github.com/chandraveshchaudhari/jupyterbook2_with_lite_template
+  license:
+    code: MIT
+    content: CC-BY-4.0
+
+  # ---------------------------------------------------------------------------
+  # Launch buttons
+  # ---------------------------------------------------------------------------
+  # Three launch options are provided:
+  #   ⚡ Power button  — jupyter.lite: true    → JupyterLite in-page execution (Pyodide/WASM)
+  #   🔵 Binder badge  — binder: <url>          → opens mybinder.org directly, visible on every page
+  #   🟠 Colab badge   — HTML img link           → added to each notebook's first cell
+  #   🚀 Rocket button — always present          → enter any JupyterHub/BinderHub URL manually
+  jupyter:
+    lite: true
+    # binder:                                    # configures the ⚡ power button's Binder backend
+    #   repo: chandraveshchaudhari/jupyterbook2_with_lite_template
+    #   ref: main
+  # Direct Binder badge (🔵) — shown on every page as a clickable badge, no dialog.
+  # Update with your own GitHub username and repo name.
+  binder: https://mybinder.org/v2/gh/chandraveshchaudhari/jupyterbook2_with_lite_template/HEAD
+
+  # ---------------------------------------------------------------------------
+  # Banner image — referenced from project root (myst.yml location)
+  # ---------------------------------------------------------------------------
+  banner: images/banner_image.png
+
+  # ---------------------------------------------------------------------------
+  # Table of Contents — controls site navigation
+  # ---------------------------------------------------------------------------
+  toc:
+    - file: intro.md
+    - title: Getting Started
+      children:
+        - file: notebooks/adding_contents.ipynb
+    - title: Features & Showcase
+      children:
+        - file: notebooks/features.ipynb
+        - file: notebooks/section_markdown_page.md
+
+site:
+  template: book-theme
+  options:
+    logo: images/banner_image.png
+    # favicon: images/favicon.ico
+    folders: true          # generates clean /page/ URLs
+    # logo_dark: images/banner_image_dark.png
+    style: _static/custom.css   # custom fonts, layout, fullscreen, scrollable output
+    outline_maxdepth: 2          # right-side outline depth (keeps it concise)
+    # hide_outline: true         # un-comment to fully hide the right outline
+
