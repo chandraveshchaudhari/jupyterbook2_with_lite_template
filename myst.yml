@@ -59,4 +59,14 @@ site:
     style: media/custom.css   # custom fonts, layout, fullscreen, scrollable output
     # outline_maxdepth: 2          # right-side outline depth (keeps it concise)
     # hide_outline: true         # un-comment to fully hide the right outline
+    css:
+      - _static/pyodide.css
+
+    js:
+      - https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js
+      - _static/pyodide-runner.js
+
+    myst:
+      plugins:
+        - ./extensions/markdown_code_to_pyodide.js
 

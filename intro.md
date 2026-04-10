@@ -124,24 +124,7 @@ Then open `_build/html/index.html` in your browser.
 | **Run code in-page** | Click the ⚡ power button in the top toolbar to activate JupyterLite |
 | **Scrollable output** | Long outputs scroll automatically inside the cell |
 
-<!-- Fullscreen floating button — available on every page that includes this script -->
-<button id="myst-fullscreen-btn" title="Toggle Fullscreen (F11)">⛶</button>
-<script>
-(function () {
-  var btn = document.getElementById('myst-fullscreen-btn');
-  if (!btn) return;
-  function update() {
-    btn.title = document.fullscreenElement ? 'Exit Fullscreen (F11)' : 'Toggle Fullscreen (F11)';
-    btn.textContent = document.fullscreenElement ? '\u2715' : '\u26f6';
-  }
-  btn.addEventListener('click', function () {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(function () {});
-    } else {
-      document.exitFullscreen();
-    }
-  });
-  document.addEventListener('fullscreenchange', update);
-  update();
-})();
-</script>
+```python python_code_block
+import numpy as np
+np.arange(10)
+```
