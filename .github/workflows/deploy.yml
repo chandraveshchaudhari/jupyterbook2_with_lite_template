@@ -56,6 +56,19 @@ jobs:
       - name: Build static HTML site
         run: jupyter-book build --html
 
+      - name: Fix absolute static paths for Pages
+        if: always()
+        run: |
+          echo "BASE_URL=$BASE_URL"
+          if [ -n "$BASE_URL" ]; then
+            echo "Rewriting absolute /_static references to $BASE_URL/_static"
+            # Rewrite in JS/HTML/CSS under _build so Pages serves assets from repo subpath
+            find _build -type f \( -name '*.html' -o -name '*.js' -o -name '*.css' \) -print0 \
+              | xargs -0 sed -i "s|/_static|$BASE_URL/_static|g" || true
+          else
+            echo "BASE_URL empty — skipping rewrite"
+          fi
+
       - name: Detect build output
         id: detect
         run: |
