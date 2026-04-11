@@ -45,13 +45,17 @@ project:
     - title: Getting Started
       children:
         - file: notebooks/adding_contents.ipynb
+    - title: Pyodide Examples
+      children:
+        - file: notebooks/pyodide_example.md
+        - file: notebooks/pyodide_usage.md
     - title: Features & Showcase
       children:
         - file: notebooks/features.ipynb
         - file: notebooks/section_markdown_page.md
 
 site:
-  template: book-theme
+  template: templates/site/myst/book-theme/themes/book
   options:
     logo: media/images/banner_image.png
     favicon: media/images/banner_image.png
@@ -60,14 +64,6 @@ site:
     style: media/custom.css   # custom fonts, layout, fullscreen, scrollable output
     # outline_maxdepth: 2          # right-side outline depth (keeps it concise)
     # hide_outline: true         # un-comment to fully hide the right outline
-    css:
-      - _static/pyodide.css
-
-    js:
-      - _static/pyodide/pyodide.js
-      - _static/codemirror/init-codemirror.js
-      - _static/pyodide-runner.js
-      - _static/pyodide-transform.js
 
     # myst: plugins removed temporarily to avoid build-time plugin errors
 
