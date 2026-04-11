@@ -85,19 +85,24 @@ def patch_build_js():
 
     close_pos = content.find("]}),", pattern.start())
 
+    # Inject a small inline script that computes the correct 
+    # `_static` base from an existing stylesheet href (if present)
+    # and then dynamically appends the required CSS/JS tags. This
+    # avoids hardcoding repo-specific root paths so the site works
+    # on both user and project GitHub Pages.
     injected = (
         ","
-        '(0,K2.jsx)("link",{rel:"stylesheet",href:"/_static/codemirror/codemirror.css"})'
-        ","
-        '(0,K2.jsx)("link",{rel:"stylesheet",href:"/_static/pyodide.css"})'
-        ","
-        '(0,K2.jsx)("script",{src:"/_static/codemirror/codemirror.js",defer:true})'
-        ","
-        '(0,K2.jsx)("script",{src:"/_static/codemirror/python.js",defer:true})'
-        ","
-        '(0,K2.jsx)("script",{src:"/_static/pyodide-runner.js",defer:true})'
-        ","
-        '(0,K2.jsx)("script",{src:"/_static/pyodide-transform.js",defer:true})'
+        '(0,K2.jsx)("script",{},`(function(){'
+        "var themeLink = Array.from(document.querySelectorAll('link[rel=\"stylesheet\"]')).find(function(l){return l.href && l.href.indexOf('/_static/')!==-1 && l.href.indexOf('myst-theme')!==-1;});"
+        "var base = themeLink ? themeLink.href.split('/_static/')[0] + '/_static' : '/_static';"
+        "function add(tag, attrs){var e=document.createElement(tag);for(var k in attrs){if(!attrs.hasOwnProperty(k))continue; if(k==='defer'){e.setAttribute('defer','');}else{e.setAttribute(k, attrs[k]);}}document.head.appendChild(e); }"
+        "add('link', {rel:'stylesheet', href: base + '/codemirror/codemirror.css'});"
+        "add('link', {rel:'stylesheet', href: base + '/pyodide.css'});"
+        "add('script', {src: base + '/codemirror/codemirror.js', defer: true});"
+        "add('script', {src: base + '/codemirror/python.js', defer: true});"
+        "add('script', {src: base + '/pyodide-runner.js', defer: true});"
+        "add('script', {src: base + '/pyodide-transform.js', defer: true});"
+        '})()`)' 
     )
 
     content = content[:close_pos] + injected + content[close_pos:]
