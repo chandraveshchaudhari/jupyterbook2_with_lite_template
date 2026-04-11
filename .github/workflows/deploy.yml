@@ -47,7 +47,13 @@ jobs:
       - name: Install Python dependencies
         run: pip install -r requirements.txt
 
-      - name: Build Jupyter Book
+      - name: Build site content (downloads theme)
+        run: jupyter-book build --site
+
+      - name: Patch theme with Pyodide/CodeMirror assets
+        run: python patch_theme.py
+
+      - name: Build static HTML site
         run: jupyter-book build --html
 
       - name: Detect build output

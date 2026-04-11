@@ -1,14 +1,25 @@
 # MyST build outputs
 _build
+_site
 
 # Python virtual environment
 .venv/
 
 # Jupyter
 .ipynb_checkpoints/
+.jupyterlite.doit.db
 
 # OS
 .DS_Store
 Thumbs.db
 
 __pycache__/
+
+# Local Pyodide WASM files (loaded from CDN at runtime)
+_static/pyodide/
+
+# MyST downloaded templates (downloaded fresh on build)
+templates/
+
+# Temp/debug files
+tmp_myst_*.txt
