@@ -1,229 +1,206 @@
-/*
-  pyodide-runner.js
-  - Loads Pyodide once from local `_static/pyodide/`
-  - Preloads packages: numpy, pandas, matplotlib
-  - Supports CodeMirror editor initialization when available
-  - Provides Run / Clear / Copy / execution timing for each cell
-*/
-(function(){
+/**
+ * pyodide-runner.js
+ *
+ * Pyodide singleton manager and Python execution engine.
+ * Loaded once per page. Handles:
+ *   - Single Pyodide instance shared across all cells
+ *   - Correct indexURL resolution (works on sub-pages)
+ *   - numpy, pandas, matplotlib preloading
+ *   - stdout/stderr capture
+ *   - matplotlib figure capture and inline rendering
+ *   - Execution timing
+ *
+ * Exported as window.PyodideRunner for use by pyodide-transform.js
+ */
+
+(function () {
   'use strict';
 
-  const INDEX_URL = (function(){
-    const script = document.currentScript && document.currentScript.src;
-    if(script && script.includes('/_static/')){
-      return new URL('../pyodide/', script).href;
-    }
-    return new URL('./_static/pyodide/', document.baseURI).href;
-  })();
-  const PRELOAD_PACKAGES = ['numpy','pandas','matplotlib'];
-  const MAX_EDITOR_HEIGHT = 420;
-
-  let pyodide = null;
-  let readyPromise = null;
-
-  function loadPyodideOnce(){
-    if(pyodide) return Promise.resolve(pyodide);
-    if(readyPromise) return readyPromise;
-
-    if(typeof loadPyodide !== 'function'){
-      return Promise.reject(new Error('Pyodide not found. Ensure _static/pyodide/pyodide.js is included.'));
-    }
-
-    readyPromise = loadPyodide({ indexURL: INDEX_URL }).then(async (py) => {
-      pyodide = py;
-      try{
-        await pyodide.loadPackage(PRELOAD_PACKAGES);
-      }catch(error){
-        console.warn('Failed to preload Pyodide packages:', error);
-      }
-      return pyodide;
-    });
-
-    return readyPromise;
-  }
-
-  function detectTheme(){
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    return document.documentElement.getAttribute('data-theme') === 'dark' || prefersDark ? 'dark' : 'light';
-  }
-
-  function createEditor(textarea){
-    if(window.CodeMirror && typeof window.CodeMirror.fromTextArea === 'function'){
-      try{
-        const cm = window.CodeMirror.fromTextArea(textarea, {
-          mode: 'python',
-          lineNumbers: true,
-          indentUnit: 4,
-          theme: detectTheme() === 'dark' ? 'darcula' : 'default',
-          viewportMargin: Infinity,
-          autoCloseBrackets: true,
-          matchBrackets: true,
-          extraKeys: { 'Tab': cm => cm.replaceSelection('    ') }
-        });
-        return {
-          cm,
-          getValue: () => cm.getValue(),
-          setValue: v => cm.setValue(v),
-          focus: () => cm.focus(),
-          hasCodeMirror: true
-        };
-      }catch(error){
-        console.warn('CodeMirror initialization failed; falling back to textarea.', error);
-      }
-    }
-
-    textarea.style.whiteSpace = 'pre';
-    textarea.style.minHeight = '140px';
-    textarea.style.maxHeight = `${MAX_EDITOR_HEIGHT}px`;
-    textarea.style.resize = 'vertical';
-
-    return {
-      getValue: () => textarea.value,
-      setValue: v => { textarea.value = v; },
-      focus: () => textarea.focus(),
-      hasCodeMirror: false
-    };
-  }
-
-  function upgradeEditors(){
-    if(!window.CodeMirror || typeof window.CodeMirror.fromTextArea !== 'function') return;
-
-    const cells = Array.from(document.querySelectorAll('.pyodide-cell'));
-    cells.forEach((cell) => {
-      const api = cell._editorAPI;
-      if(api && !api.hasCodeMirror){
-        const textarea = cell.querySelector('.pyodide-editor');
-        if(textarea){
-          const code = api.getValue();
-          const newApi = createEditor(textarea);
-          newApi.setValue(code);
-          cell._editorAPI = newApi;
+  // ── Resolve the site root so _static/ works on sub-pages ──────────────────
+  // Strategy: find the injected <link> or <script> tag for pyodide-runner.js
+  // itself, then derive the root. Falls back to walking up from location.pathname.
+  function resolveSiteRoot() {
+    // Try to find our own script tag
+    const scripts = document.querySelectorAll('script[src]');
+    for (const s of scripts) {
+      const src = s.getAttribute('src');
+      if (src && src.includes('pyodide-runner')) {
+        // src might be /_static/pyodide-runner.js  →  root is /
+        // or /mybook/_static/pyodide-runner.js     →  root is /mybook/
+        const url = new URL(src, location.href);
+        const staticIdx = url.pathname.indexOf('/_static/');
+        if (staticIdx !== -1) {
+          return url.origin + url.pathname.slice(0, staticIdx + 1);
         }
       }
+    }
+    // Fallback: strip the filename, walk up until we find the root
+    // This heuristic works for GitHub Pages paths like /repo/chapter/page/
+    return location.origin + '/';
+  }
+
+  const SITE_ROOT = resolveSiteRoot();
+  const PYODIDE_INDEX_URL = SITE_ROOT + '_static/pyodide/';
+
+  // ── State ──────────────────────────────────────────────────────────────────
+  let pyodideInstance = null;
+  let loadingPromise = null;
+  const PRELOADED_PACKAGES = ['numpy', 'pandas', 'matplotlib'];
+
+  // ── Internal helpers ───────────────────────────────────────────────────────
+
+  /** Dynamically inject a <script> and wait for it to load. */
+  function loadScript(url) {
+    return new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = url;
+      s.onload = resolve;
+      s.onerror = () => reject(new Error(`Failed to load script: ${url}`));
+      document.head.appendChild(s);
     });
   }
 
-  function escapeHtml(text){
-    return String(text)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-  }
+  async function _loadPyodide() {
+    if (pyodideInstance) return pyodideInstance;
+    if (loadingPromise) return loadingPromise;
 
-  function clearOutput(outputInner){
-    outputInner.innerHTML = '';
-  }
-
-  function appendOutput(outputInner, html, className){
-    const row = document.createElement('div');
-    if(className) row.className = className;
-    row.innerHTML = html;
-    outputInner.appendChild(row);
-    outputInner.parentElement.scrollTop = outputInner.parentElement.scrollHeight;
-  }
-
-  async function runCode(cellEl){
-    const statusEl = cellEl.querySelector('.pyodide-status');
-    const timeEl = cellEl.querySelector('.pyodide-time');
-    const spinner = cellEl.querySelector('.pyodide-spinner');
-    const outputInner = cellEl.querySelector('.pyodide-output-inner');
-    const editorAPI = cellEl._editorAPI;
-    const code = editorAPI && typeof editorAPI.getValue === 'function' ? editorAPI.getValue() : '';
-
-    statusEl.textContent = 'Running...';
-    spinner.classList.add('running');
-    clearOutput(outputInner);
-    const start = performance.now();
-
-    try{
-      const py = await loadPyodideOnce();
-      const stdout = [];
-      const stderr = [];
-
-      py.setStdout({ batched: (chunk) => stdout.push(chunk) });
-      py.setStderr({ batched: (chunk) => stderr.push(chunk) });
-
-      const result = await py.runPythonAsync(code);
-
-      if(stdout.length){
-        appendOutput(outputInner, `<pre class="py-stdout">${escapeHtml(stdout.join(''))}</pre>`, 'py-stdout');
+    loadingPromise = (async () => {
+      // Dynamically load pyodide.js if not already available
+      if (typeof globalThis.loadPyodide !== 'function') {
+        await loadScript(PYODIDE_INDEX_URL + 'pyodide.js');
       }
-      if(stderr.length){
-        appendOutput(outputInner, `<pre class="py-stderr">${escapeHtml(stderr.join(''))}</pre>`, 'py-stderr');
-      }
-      if(result !== undefined && result !== null){
-        appendOutput(outputInner, `<div class="py-result">${escapeHtml(String(result))}</div>`, 'py-result');
+      if (typeof globalThis.loadPyodide !== 'function') {
+        throw new Error(
+          'loadPyodide is not defined after loading pyodide.js. ' +
+          'Check that _static/pyodide/pyodide.js exists and is valid.'
+        );
       }
 
-      statusEl.textContent = 'Done';
-    }catch(error){
-      appendOutput(outputInner, `<pre class="py-exception">${escapeHtml(error)}</pre>`, 'py-exception');
-      statusEl.textContent = 'Error';
-    }finally{
-      spinner.classList.remove('running');
-      const elapsed = ((performance.now() - start) / 1000).toFixed(2);
-      timeEl.textContent = ` ${elapsed}s`;
-      if(pyodide){
-        pyodide.setStdout();
-        pyodide.setStderr();
-      }
-    }
+      const py = await globalThis.loadPyodide({ indexURL: PYODIDE_INDEX_URL });
+
+      // Preload scientific packages
+      await py.loadPackage(PRELOADED_PACKAGES);
+
+      // Install a custom stdout/stderr redirector
+      py.runPython(`
+import sys, io, js
+
+class _JsBridge(io.TextIOBase):
+    def __init__(self, tag):
+        self._tag = tag
+    def write(self, s):
+        js.globalThis._pyodideStreamWrite(self._tag, s)
+        return len(s)
+    def flush(self):
+        pass
+
+sys.stdout = _JsBridge("stdout")
+sys.stderr = _JsBridge("stderr")
+      `);
+
+      // Set up matplotlib backend
+      py.runPython(`
+import matplotlib
+matplotlib.use("module://matplotlib_pyodide.html5_canvas_backend")
+      `);
+
+      pyodideInstance = py;
+      return py;
+    })();
+
+    return loadingPromise;
   }
 
-  function bindCell(cellEl){
-    if(cellEl._pyodideCellBound) return;
-    const textarea = cellEl.querySelector('.pyodide-editor');
-    const editorAPI = createEditor(textarea);
-    cellEl._editorAPI = editorAPI;
-
-    if(!editorAPI.hasCodeMirror){
-      textarea.style.overflow = 'auto';
-      textarea.addEventListener('input', () => {
-        textarea.style.height = 'auto';
-        textarea.style.height = `${Math.min(MAX_EDITOR_HEIGHT, textarea.scrollHeight)}px`;
-      });
-      textarea.dispatchEvent(new Event('input'));
-    }
-
-    const runBtn = cellEl.querySelector('.py-run');
-    const clearBtn = cellEl.querySelector('.py-clear');
-    const copyBtn = cellEl.querySelector('.py-copy');
-    const outputInner = cellEl.querySelector('.pyodide-output-inner');
-
-    runBtn.addEventListener('click', () => runCode(cellEl));
-    clearBtn.addEventListener('click', () => clearOutput(outputInner));
-    copyBtn.addEventListener('click', () => {
-      const value = editorAPI.getValue();
-      if(navigator.clipboard && navigator.clipboard.writeText){
-        navigator.clipboard.writeText(value).catch(() => {});
-      } else {
-        const copyArea = document.createElement('textarea');
-        copyArea.value = value;
-        document.body.appendChild(copyArea);
-        copyArea.select();
-        document.execCommand('copy');
-        copyArea.remove();
-      }
-    });
-
-    cellEl._pyodideCellBound = true;
-  }
-
-  function initAll(){
-    const cells = Array.from(document.querySelectorAll('.pyodide-cell'));
-    cells.forEach(bindCell);
-  }
-
-  window.pyodideRunner = {
-    init: initAll,
-    load: loadPyodideOnce,
-    runAll: async function(){
-      const cells = Array.from(document.querySelectorAll('.pyodide-cell'));
-      for(const cell of cells){
-        await runCode(cell);
-      }
+  // Called from Python via js.globalThis._pyodideStreamWrite
+  window._pyodideStreamWrite = function (tag, text) {
+    // Stored per-execution in a temporary buffer; cells collect this themselves
+    if (window._pyodideCurrentCell) {
+      window._pyodideCurrentCell._buffer = window._pyodideCurrentCell._buffer || { stdout: '', stderr: '' };
+      window._pyodideCurrentCell._buffer[tag] += text;
     }
   };
 
-  window.addEventListener('codemirror-loaded', upgradeEditors);
+  // ── Public API ─────────────────────────────────────────────────────────────
+  window.PyodideRunner = {
+    /**
+     * Ensure Pyodide is loaded. Returns the pyodide instance.
+     * Safe to call multiple times — returns same promise.
+     */
+    async load() {
+      return _loadPyodide();
+    },
+
+    get isReady() {
+      return pyodideInstance !== null;
+    },
+
+    /**
+     * Execute Python code in the shared Pyodide instance.
+     *
+     * @param {string} code       Python source to execute
+     * @param {object} cellRef    The cell DOM wrapper (used for stream capture)
+     * @returns {Promise<ExecutionResult>}
+     *
+     * ExecutionResult:
+     *   { stdout, stderr, figures, error, durationMs }
+     */
+    async execute(code, cellRef) {
+      const py = await _loadPyodide();
+
+      // Register the active cell for stream capture
+      const captureTarget = { _buffer: { stdout: '', stderr: '' } };
+      window._pyodideCurrentCell = captureTarget;
+
+      // Clear any previous matplotlib figures
+      py.runPython(`
+import matplotlib.pyplot as plt
+plt.close('all')
+      `);
+
+      const t0 = performance.now();
+      let error = null;
+      let returnValue = undefined;
+
+      try {
+        // runPythonAsync supports top-level await in user code
+        returnValue = await py.runPythonAsync(code);
+      } catch (err) {
+        error = err;
+      }
+
+      const durationMs = Math.round(performance.now() - t0);
+      window._pyodideCurrentCell = null;
+
+      // Collect matplotlib figures as data URLs
+      let figures = [];
+      try {
+        const figData = py.runPython(`
+import matplotlib.pyplot as plt, io, base64, json
+_figs = []
+for _fig_num in plt.get_fignums():
+    _fig = plt.figure(_fig_num)
+    _buf = io.BytesIO()
+    _fig.savefig(_buf, format='png', bbox_inches='tight', dpi=120)
+    _buf.seek(0)
+    _figs.append('data:image/png;base64,' + base64.b64encode(_buf.read()).decode())
+    plt.close(_fig)
+json.dumps(_figs)
+        `);
+        figures = JSON.parse(figData);
+      } catch (_) {
+        // matplotlib not used or figure collection failed — that's fine
+      }
+
+      return {
+        stdout: captureTarget._buffer.stdout,
+        stderr: captureTarget._buffer.stderr,
+        figures,
+        error: error ? String(error) : null,
+        returnValue: returnValue !== undefined && returnValue !== null
+          ? String(returnValue)
+          : null,
+        durationMs,
+      };
+    },
+  };
 })();

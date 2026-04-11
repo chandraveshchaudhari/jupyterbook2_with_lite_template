@@ -40,6 +40,10 @@ project:
   # ---------------------------------------------------------------------------
   # Table of Contents — controls site navigation
   # ---------------------------------------------------------------------------
+  plugins:
+    - plugins/pyodide-block.mjs
+  
+  
   toc:
     - file: intro.md
     - title: Getting Started
@@ -55,7 +59,7 @@ project:
         - file: notebooks/section_markdown_page.md
 
 site:
-  template: templates/site/myst/book-theme/themes/book
+  template: book-theme
   options:
     logo: media/images/banner_image.png
     favicon: media/images/banner_image.png
@@ -64,6 +68,3 @@ site:
     style: media/custom.css   # custom fonts, layout, fullscreen, scrollable output
     # outline_maxdepth: 2          # right-side outline depth (keeps it concise)
     # hide_outline: true         # un-comment to fully hide the right outline
-
-    # myst: plugins removed temporarily to avoid build-time plugin errors
-
