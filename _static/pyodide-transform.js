@@ -150,7 +150,7 @@
           smartIndent: true,
           matchBrackets: true,
           lineWrapping: false,
-          viewportMargin: Infinity,
+          viewportMargin: 20,
           extraKeys: {
             'Shift-Enter': function () { runCode(); },
             'Tab': function (cmInst) {
@@ -162,7 +162,8 @@
             },
           },
         });
-        cm.setSize(null, null); // auto-height
+        // Auto-height: grows with content, container CSS handles max-height scroll
+        cm.setSize(null, null);
       } catch (err) {
         console.warn('[pyodide-transform] CodeMirror init failed:', err);
         cm = null;

@@ -4,10 +4,10 @@
  * Pyodide singleton manager and Python execution engine.
  * Loaded once per page. Handles:
  *   - Single Pyodide instance shared across all cells
- *   - Correct indexURL resolution (works on sub-pages)
+ *   - Loads Pyodide + packages from CDN (jsdelivr)
  *   - numpy, pandas, matplotlib preloading
  *   - stdout/stderr capture
- *   - matplotlib figure capture and inline rendering
+ *   - matplotlib figure capture (AGG backend → base64 PNG)
  *   - Execution timing
  *
  * Exported as window.PyodideRunner for use by pyodide-transform.js
@@ -16,31 +16,8 @@
 (function () {
   'use strict';
 
-  // ── Resolve the site root so _static/ works on sub-pages ──────────────────
-  // Strategy: find the injected <link> or <script> tag for pyodide-runner.js
-  // itself, then derive the root. Falls back to walking up from location.pathname.
-  function resolveSiteRoot() {
-    // Try to find our own script tag
-    const scripts = document.querySelectorAll('script[src]');
-    for (const s of scripts) {
-      const src = s.getAttribute('src');
-      if (src && src.includes('pyodide-runner')) {
-        // src might be /_static/pyodide-runner.js  →  root is /
-        // or /mybook/_static/pyodide-runner.js     →  root is /mybook/
-        const url = new URL(src, location.href);
-        const staticIdx = url.pathname.indexOf('/_static/');
-        if (staticIdx !== -1) {
-          return url.origin + url.pathname.slice(0, staticIdx + 1);
-        }
-      }
-    }
-    // Fallback: strip the filename, walk up until we find the root
-    // This heuristic works for GitHub Pages paths like /repo/chapter/page/
-    return location.origin + '/';
-  }
-
-  const SITE_ROOT = resolveSiteRoot();
-  const PYODIDE_INDEX_URL = SITE_ROOT + '_static/pyodide/';
+  // ── CDN base URL ───────────────────────────────────────────────────────────
+  const PYODIDE_CDN = 'https://cdn.jsdelivr.net/pyodide/v0.29.3/full/';
 
   // ── State ──────────────────────────────────────────────────────────────────
   let pyodideInstance = null;
@@ -65,20 +42,19 @@
     if (loadingPromise) return loadingPromise;
 
     loadingPromise = (async () => {
-      // Dynamically load pyodide.js if not already available
+      // Load pyodide.js from CDN
       if (typeof globalThis.loadPyodide !== 'function') {
-        await loadScript(PYODIDE_INDEX_URL + 'pyodide.js');
+        await loadScript(PYODIDE_CDN + 'pyodide.js');
       }
       if (typeof globalThis.loadPyodide !== 'function') {
         throw new Error(
-          'loadPyodide is not defined after loading pyodide.js. ' +
-          'Check that _static/pyodide/pyodide.js exists and is valid.'
+          'loadPyodide is not defined after loading pyodide.js from CDN.'
         );
       }
 
-      const py = await globalThis.loadPyodide({ indexURL: PYODIDE_INDEX_URL });
+      const py = await globalThis.loadPyodide({ indexURL: PYODIDE_CDN });
 
-      // Preload scientific packages
+      // Preload scientific packages (fetched from CDN)
       await py.loadPackage(PRELOADED_PACKAGES);
 
       // Install a custom stdout/stderr redirector
@@ -98,10 +74,10 @@ sys.stdout = _JsBridge("stdout")
 sys.stderr = _JsBridge("stderr")
       `);
 
-      // Set up matplotlib backend
+      // Set up matplotlib AGG backend (non-interactive, renders to PNG)
       py.runPython(`
 import matplotlib
-matplotlib.use("module://matplotlib_pyodide.html5_canvas_backend")
+matplotlib.use("agg")
       `);
 
       pyodideInstance = py;

@@ -33,7 +33,7 @@ def copy_static_assets():
         sys.exit(1)
 
     # Subdirectories to copy
-    dirs_to_copy = ["codemirror", "pyodide"]
+    dirs_to_copy = ["codemirror"]
     files_to_copy = ["pyodide-runner.js", "pyodide-transform.js", "pyodide.css"]
 
     os.makedirs(PUBLIC_STATIC, exist_ok=True)
