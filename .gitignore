@@ -15,11 +15,5 @@ Thumbs.db
 
 __pycache__/
 
-# Local Pyodide WASM files (loaded from CDN at runtime)
-_static/pyodide/
-
-# MyST downloaded templates (downloaded fresh on build)
-templates/
-
 # Temp/debug files
 tmp_myst_*.txt
