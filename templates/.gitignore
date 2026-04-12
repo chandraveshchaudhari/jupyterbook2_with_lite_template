@@ -1,0 +1,10 @@
+# Heavy build artifacts and dependencies
+node_modules/
+.turbo/
+
+# Thebe build files (143MB) — not needed for the theme to work
+site/myst/book-theme/themes/book/public/build/
+
+# npm/pnpm lock files
+package-lock.json
+pnpm-lock.yaml

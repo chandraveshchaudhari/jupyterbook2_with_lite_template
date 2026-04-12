@@ -15,5 +15,8 @@ Thumbs.db
 
 __pycache__/
 
+# Local Pyodide WASM files (loaded from CDN at runtime)
+_static/pyodide/
+
 # Temp/debug files
 tmp_myst_*.txt
