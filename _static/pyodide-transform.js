@@ -92,8 +92,25 @@
     clearBtn.title = 'Clear output';
     clearBtn.textContent = 'Clear';
 
+    var restartBtn = document.createElement('button');
+    restartBtn.className = 'pyodide-btn pyodide-btn-restart';
+    restartBtn.title = 'Restart Pyodide kernel (clears all state)';
+    restartBtn.innerHTML =
+      '<svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor">' +
+      '<path d="M8 1.5a6.5 6.5 0 1 0 6.5 6.5h-1.5A5 5 0 1 1 8 3V1.5z"/>' +
+      '<path d="M8 0l3 3-3 3V0z"/></svg> Restart';
+
+    var launchBtn = document.createElement('button');
+    launchBtn.className = 'pyodide-btn pyodide-btn-launch';
+    launchBtn.title = 'Open in JupyterLite notebook';
+    launchBtn.innerHTML =
+      '<svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor">' +
+      '<path d="M2 2.5A2.5 2.5 0 0 1 4.5 0h5.793a1 1 0 0 1 .707.293l2.707 2.707a1 1 0 0 1 .293.707V13.5A2.5 2.5 0 0 1 11.5 16h-7A2.5 2.5 0 0 1 2 13.5v-11zm2.5-1A1.5 1.5 0 0 0 3 3v10.5A1.5 1.5 0 0 0 4.5 15h7a1.5 1.5 0 0 0 1.5-1.5V4l-2.5-2.5H4.5zM5 7a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5A.5.5 0 0 1 5 7zm0 3a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5A.5.5 0 0 1 5 10z"/></svg> Jupyter';
+
     controls.appendChild(runBtn);
     controls.appendChild(clearBtn);
+    controls.appendChild(restartBtn);
+    controls.appendChild(launchBtn);
     header.appendChild(badge);
     header.appendChild(controls);
 
@@ -304,9 +321,60 @@
       })();
     }
 
+    // ── Restart kernel handler ───────────────────────────────────────────────
+    function restartKernel() {
+      if (!window.PyodideRunner) return;
+      restartBtn.disabled = true;
+
+      // Clear all outputs on the page
+      var allWrappers = document.querySelectorAll('.pyodide-wrapper');
+      for (var w = 0; w < allWrappers.length; w++) {
+        var out = allWrappers[w].querySelector('.pyodide-output');
+        if (out) { out.innerHTML = ''; out.hidden = true; }
+        var sb = allWrappers[w].querySelector('.pyodide-status');
+        if (sb) sb.textContent = '';
+        var tm = allWrappers[w].querySelector('.pyodide-timing');
+        if (tm) tm.textContent = '';
+      }
+
+      setStatus('Restarting kernel...', 'info');
+
+      (async function () {
+        try {
+          await window.PyodideRunner.restart();
+          _pyodideLoadState = 'ready';
+          setStatus('Kernel restarted', 'success');
+        } catch (err) {
+          _pyodideLoadState = 'error';
+          _pyodideLoadError = String(err);
+          setStatus('Restart failed: ' + err, 'error');
+        }
+        restartBtn.disabled = false;
+      })();
+    }
+
+    // ── Launch Jupyter handler ────────────────────────────────────────────────
+    function launchJupyter() {
+      // Try to derive notebook path from the current page URL
+      var slug = window.location.pathname.replace(/^\//, '').replace(/\/$/, '');
+      // Remove leading base path segments like 'content/'
+      slug = slug.replace(/^content\//, '');
+      // Convert dots to slashes for nested paths (e.g. notebooks.pyodide-example → notebooks/pyodide-example)
+      var parts = slug.split('.');
+      var nbPath = parts.join('/');
+
+      // Try Binder URL from myst.yml (embedded in page meta or use default)
+      var binderBase = 'https://mybinder.org/v2/gh/chandraveshchaudhari/jupyterbook2_with_lite_template/HEAD';
+      var url = binderBase + '?labpath=notebooks/' + encodeURIComponent(parts[parts.length - 1].replace(/-/g, '_')) + '.ipynb';
+
+      window.open(url, '_blank', 'noopener');
+    }
+
     // ── Wire buttons ─────────────────────────────────────────────────────────
     runBtn.addEventListener('click', runCode);
     clearBtn.addEventListener('click', clearOutput);
+    restartBtn.addEventListener('click', restartKernel);
+    launchBtn.addEventListener('click', launchJupyter);
   }
 
   // ── Find and transform all un-transformed cells ────────────────────────────

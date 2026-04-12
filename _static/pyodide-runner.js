@@ -111,6 +111,20 @@ matplotlib.use("agg")
     },
 
     /**
+     * Destroy the current Pyodide instance and reset state so the next
+     * load()/execute() call creates a fresh runtime with packages reloaded.
+     */
+    async restart() {
+      if (pyodideInstance) {
+        try { pyodideInstance.runPython('import sys; sys.stdout = sys.__stdout__; sys.stderr = sys.__stderr__'); } catch (_) {}
+      }
+      pyodideInstance = null;
+      loadingPromise = null;
+      // Re-initialise immediately so user doesn't have to click Run first
+      return _loadPyodide();
+    },
+
+    /**
      * Execute Python code in the shared Pyodide instance.
      *
      * @param {string} code       Python source to execute

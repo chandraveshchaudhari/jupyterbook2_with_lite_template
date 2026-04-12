@@ -85,6 +85,50 @@
   background: var(--color-background-secondary, #f3f4f6);
 }
 
+.pyodide-btn-restart {
+  background: #d4820c;
+  color: #fff;
+  border-color: rgba(31, 35, 40, 0.15);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pyodide-btn-restart:hover:not(:disabled) {
+  background: #bf7a0d;
+}
+
+.pyodide-btn-restart:active:not(:disabled) {
+  background: #a86d0b;
+}
+
+.pyodide-btn-restart svg {
+  vertical-align: middle;
+}
+
+.pyodide-btn-launch {
+  background: #0969da;
+  color: #fff;
+  border-color: rgba(31, 35, 40, 0.15);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pyodide-btn-launch:hover:not(:disabled) {
+  background: #0860c7;
+}
+
+.pyodide-btn-launch:active:not(:disabled) {
+  background: #0757b5;
+}
+
+.pyodide-btn-launch svg {
+  vertical-align: middle;
+}
+
 /* ── CodeMirror editor container ──────────────────────────────────────────── */
 .pyodide-editor-container {
   position: relative;
@@ -266,6 +310,20 @@
   }
 
   .pyodide-btn-clear:hover:not(:disabled) { background: #30363d; }
+
+  .pyodide-btn-restart {
+    background: #9e6a03;
+    border-color: #30363d;
+  }
+
+  .pyodide-btn-restart:hover:not(:disabled) { background: #b07d09; }
+
+  .pyodide-btn-launch {
+    background: #1f6feb;
+    border-color: #30363d;
+  }
+
+  .pyodide-btn-launch:hover:not(:disabled) { background: #388bfd; }
 
   .CodeMirror.cm-s-pyodide-theme {
     background: #0d1117;
