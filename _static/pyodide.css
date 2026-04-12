@@ -2,6 +2,15 @@
    pyodide.css — Styles for interactive Pyodide cells in MyST JupyterBook v2
    ============================================================================= */
 
+/* ── Tailwind Preflight override ──────────────────────────────────────────── */
+/* Tailwind base sets: svg { display: block; vertical-align: middle; }
+   This breaks inline-flex buttons that contain SVG icons. Override it. */
+.pyodide-wrapper svg,
+.pyodide-rocket svg {
+  display: inline !important;
+  vertical-align: middle !important;
+}
+
 /* ── Wrapper ──────────────────────────────────────────────────────────────── */
 .pyodide-wrapper {
   border: 1px solid var(--color-border, #d0d7de);
@@ -17,7 +26,7 @@
 
 /* ── Header bar ───────────────────────────────────────────────────────────── */
 .pyodide-header {
-  display: flex;
+  display: flex !important;
   align-items: center;
   justify-content: space-between;
   padding: 0.4rem 0.75rem;
@@ -36,13 +45,13 @@
 }
 
 .pyodide-controls {
-  display: flex;
+  display: flex !important;
   gap: 0.4rem;
 }
 
 /* ── Buttons ──────────────────────────────────────────────────────────────── */
 .pyodide-btn {
-  display: inline-flex;
+  display: inline-flex !important;
   align-items: center;
   gap: 0.3rem;
   padding: 0.3rem 0.65rem;
@@ -85,48 +94,83 @@
   background: var(--color-background-secondary, #f3f4f6);
 }
 
-.pyodide-btn-restart {
-  background: #d4820c;
-  color: #fff;
-  border-color: rgba(31, 35, 40, 0.15);
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+/* ── Rocket Toolbar (page-level launcher) ─────────────────────────────────── */
+.pyodide-rocket {
+  position: fixed;
+  top: 70px;
+  right: 18px;
+  z-index: 10000;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-size: 0.85rem;
 }
 
-.pyodide-btn-restart:hover:not(:disabled) {
-  background: #bf7a0d;
-}
-
-.pyodide-btn-restart:active:not(:disabled) {
-  background: #a86d0b;
-}
-
-.pyodide-btn-restart svg {
-  vertical-align: middle;
-}
-
-.pyodide-btn-launch {
+.pyodide-rocket-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
   background: #0969da;
   color: #fff;
-  border-color: rgba(31, 35, 40, 0.15);
-  font-weight: 600;
-  display: inline-flex;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  display: flex !important;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.15s;
 }
-
-.pyodide-btn-launch:hover:not(:disabled) {
+.pyodide-rocket-btn:hover {
   background: #0860c7;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  transform: scale(1.08);
 }
-
-.pyodide-btn-launch:active:not(:disabled) {
+.pyodide-rocket-btn:active {
   background: #0757b5;
+  transform: scale(1.0);
 }
 
-.pyodide-btn-launch svg {
-  vertical-align: middle;
+.pyodide-rocket-menu {
+  position: absolute;
+  top: 50px;
+  right: 0;
+  min-width: 200px;
+  background: #fff;
+  border: 1px solid #d0d7de;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  padding: 4px 0;
+  animation: pyodide-menu-in 0.12s ease-out;
+}
+
+@keyframes pyodide-menu-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.pyodide-rocket-item {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 14px;
+  font-size: 0.84rem;
+  color: #1f2328;
+  text-decoration: none;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  line-height: 1.4;
+  box-sizing: border-box;
+}
+.pyodide-rocket-item:hover {
+  background: #f3f4f6;
+}
+.pyodide-rocket-item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.pyodide-rocket-item svg {
+  flex-shrink: 0;
 }
 
 /* ── CodeMirror editor container ──────────────────────────────────────────── */
@@ -155,7 +199,6 @@
 }
 
 /* ── CodeMirror colour theme (pyodide-theme) ──────────────────────────────── */
-/* Matches common light-mode book themes. Override with your own. */
 .CodeMirror.cm-s-pyodide-theme {
   background: #fafbfc;
   color: #1f2328;
@@ -244,9 +287,7 @@
   display: none;
 }
 
-/* Override Tailwind prose <pre> styles that leak into the output area.
-   The book-theme applies: .article :where(pre) { background-color; padding; margin; border-radius; }
-   We must override with higher specificity. The wrapper also has `not-prose` class. */
+/* Override Tailwind prose <pre> styles that leak into the output area. */
 .pyodide-output pre {
   background: transparent !important;
   border: none !important;
@@ -303,8 +344,6 @@
 }
 
 /* ── Dark mode support ────────────────────────────────────────────────────── */
-/* Book-theme uses html.dark class. Also support OS-level prefers-color-scheme. */
-
 html.dark .pyodide-wrapper {
   border-color: #30363d;
   background: #0d1117;
@@ -325,17 +364,23 @@ html.dark .pyodide-btn-clear {
 }
 html.dark .pyodide-btn-clear:hover:not(:disabled) { background: #30363d; }
 
-html.dark .pyodide-btn-restart {
-  background: #9e6a03;
-  border-color: #30363d;
-}
-html.dark .pyodide-btn-restart:hover:not(:disabled) { background: #b07d09; }
-
-html.dark .pyodide-btn-launch {
+/* Rocket dark mode */
+html.dark .pyodide-rocket-btn {
   background: #1f6feb;
-  border-color: #30363d;
 }
-html.dark .pyodide-btn-launch:hover:not(:disabled) { background: #388bfd; }
+html.dark .pyodide-rocket-btn:hover { background: #388bfd; }
+
+html.dark .pyodide-rocket-menu {
+  background: #161b22;
+  border-color: #30363d;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+html.dark .pyodide-rocket-item {
+  color: #c9d1d9;
+}
+html.dark .pyodide-rocket-item:hover {
+  background: #21262d;
+}
 
 html.dark .CodeMirror.cm-s-pyodide-theme {
   background: #0d1117;
@@ -385,7 +430,7 @@ html.dark div.pyodide-cell:not([data-pyodide-transformed])::before {
   color: #58a6ff;
 }
 
-/* Fallback: OS-level dark preference (mirrors html.dark rules above) */
+/* Fallback: OS-level dark preference */
 @media (prefers-color-scheme: dark) {
   .pyodide-wrapper {
     border-color: #30363d;
@@ -403,10 +448,15 @@ html.dark div.pyodide-cell:not([data-pyodide-transformed])::before {
     border-color: #30363d;
   }
   .pyodide-btn-clear:hover:not(:disabled) { background: #30363d; }
-  .pyodide-btn-restart { background: #9e6a03; border-color: #30363d; }
-  .pyodide-btn-restart:hover:not(:disabled) { background: #b07d09; }
-  .pyodide-btn-launch { background: #1f6feb; border-color: #30363d; }
-  .pyodide-btn-launch:hover:not(:disabled) { background: #388bfd; }
+  .pyodide-rocket-btn { background: #1f6feb; }
+  .pyodide-rocket-btn:hover { background: #388bfd; }
+  .pyodide-rocket-menu {
+    background: #161b22;
+    border-color: #30363d;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  }
+  .pyodide-rocket-item { color: #c9d1d9; }
+  .pyodide-rocket-item:hover { background: #21262d; }
   .CodeMirror.cm-s-pyodide-theme { background: #0d1117; color: #c9d1d9; }
   .cm-s-pyodide-theme .CodeMirror-gutters {
     background: #161b22;
@@ -448,7 +498,9 @@ html.dark div.pyodide-cell:not([data-pyodide-transformed])::before {
 }
 
 /* ── Accessibility: focus ring ────────────────────────────────────────────── */
-.pyodide-btn:focus-visible {
+.pyodide-btn:focus-visible,
+.pyodide-rocket-btn:focus-visible,
+.pyodide-rocket-item:focus-visible {
   outline: 2px solid #0969da;
   outline-offset: 2px;
 }
@@ -470,4 +522,17 @@ div.pyodide-cell:not([data-pyodide-transformed])::before {
   font-weight: 600;
   color: #0550ae;
   letter-spacing: 0.02em;
+}
+
+/* ── Responsive: adjust rocket on small screens ───────────────────────────── */
+@media (max-width: 768px) {
+  .pyodide-rocket {
+    top: auto;
+    bottom: 18px;
+    right: 18px;
+  }
+  .pyodide-rocket-menu {
+    top: auto;
+    bottom: 50px;
+  }
 }
