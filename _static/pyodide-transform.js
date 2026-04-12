@@ -64,7 +64,7 @@
 
     // ── Wrapper ──────────────────────────────────────────────────────────────
     var wrapper = document.createElement('div');
-    wrapper.className = 'pyodide-wrapper';
+    wrapper.className = 'pyodide-wrapper not-prose';
     wrapper.id = uid;
     wrapper.setAttribute('role', 'region');
     wrapper.setAttribute('aria-label', 'Interactive Python cell');
@@ -81,6 +81,7 @@
     controls.className = 'pyodide-controls';
 
     var runBtn = document.createElement('button');
+    runBtn.type = 'button';
     runBtn.className = 'pyodide-btn pyodide-btn-run';
     runBtn.title = 'Run (Shift+Enter)';
     runBtn.innerHTML =
@@ -88,11 +89,13 @@
       '<path d="M3 2.5l10 5.5-10 5.5V2.5z"/></svg> Run';
 
     var clearBtn = document.createElement('button');
+    clearBtn.type = 'button';
     clearBtn.className = 'pyodide-btn pyodide-btn-clear';
     clearBtn.title = 'Clear output';
     clearBtn.textContent = 'Clear';
 
     var restartBtn = document.createElement('button');
+    restartBtn.type = 'button';
     restartBtn.className = 'pyodide-btn pyodide-btn-restart';
     restartBtn.title = 'Restart Pyodide kernel (clears all state)';
     restartBtn.innerHTML =
@@ -101,8 +104,9 @@
       '<path d="M8 0l3 3-3 3V0z"/></svg> Restart';
 
     var launchBtn = document.createElement('button');
+    launchBtn.type = 'button';
     launchBtn.className = 'pyodide-btn pyodide-btn-launch';
-    launchBtn.title = 'Open in JupyterLite notebook';
+    launchBtn.title = 'Open in Jupyter notebook';
     launchBtn.innerHTML =
       '<svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor">' +
       '<path d="M2 2.5A2.5 2.5 0 0 1 4.5 0h5.793a1 1 0 0 1 .707.293l2.707 2.707a1 1 0 0 1 .293.707V13.5A2.5 2.5 0 0 1 11.5 16h-7A2.5 2.5 0 0 1 2 13.5v-11zm2.5-1A1.5 1.5 0 0 0 3 3v10.5A1.5 1.5 0 0 0 4.5 15h7a1.5 1.5 0 0 0 1.5-1.5V4l-2.5-2.5H4.5zM5 7a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5A.5.5 0 0 1 5 7zm0 3a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5A.5.5 0 0 1 5 10z"/></svg> Jupyter';
@@ -355,19 +359,7 @@
 
     // ── Launch Jupyter handler ────────────────────────────────────────────────
     function launchJupyter() {
-      // Try to derive notebook path from the current page URL
-      var slug = window.location.pathname.replace(/^\//, '').replace(/\/$/, '');
-      // Remove leading base path segments like 'content/'
-      slug = slug.replace(/^content\//, '');
-      // Convert dots to slashes for nested paths (e.g. notebooks.pyodide-example → notebooks/pyodide-example)
-      var parts = slug.split('.');
-      var nbPath = parts.join('/');
-
-      // Try Binder URL from myst.yml (embedded in page meta or use default)
-      var binderBase = 'https://mybinder.org/v2/gh/chandraveshchaudhari/jupyterbook2_with_lite_template/HEAD';
-      var url = binderBase + '?labpath=notebooks/' + encodeURIComponent(parts[parts.length - 1].replace(/-/g, '_')) + '.ipynb';
-
-      window.open(url, '_blank', 'noopener');
+      window.open('https://jupyter.org/try-jupyter/lab/index.html', '_blank', 'noopener');
     }
 
     // ── Wire buttons ─────────────────────────────────────────────────────────

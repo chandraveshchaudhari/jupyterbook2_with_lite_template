@@ -244,6 +244,20 @@
   display: none;
 }
 
+/* Override Tailwind prose <pre> styles that leak into the output area.
+   The book-theme applies: .article :where(pre) { background-color; padding; margin; border-radius; }
+   We must override with higher specificity. The wrapper also has `not-prose` class. */
+.pyodide-output pre {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  margin: 0 0 0.4rem !important;
+  overflow: visible !important;
+  font-size: 0.85rem !important;
+  line-height: 1.55 !important;
+}
+
 .pyodide-stdout,
 .pyodide-return-value {
   margin: 0 0 0.4rem;
@@ -261,10 +275,10 @@
   font-family: inherit;
   font-size: 0.85rem;
   color: #9a4700;
-  background: #fff8c5;
+  background: #fff8c5 !important;
   border-left: 3px solid #d4a72c;
-  padding: 0.3rem 0.5rem;
-  border-radius: 0 3px 3px 0;
+  padding: 0.3rem 0.5rem !important;
+  border-radius: 0 3px 3px 0 !important;
 }
 
 .pyodide-error {
@@ -274,10 +288,10 @@
   font-family: inherit;
   font-size: 0.85rem;
   color: #82071e;
-  background: #ffebe9;
+  background: #ffebe9 !important;
   border-left: 3px solid #ff818266;
-  padding: 0.3rem 0.5rem;
-  border-radius: 0 3px 3px 0;
+  padding: 0.3rem 0.5rem !important;
+  border-radius: 0 3px 3px 0 !important;
 }
 
 .pyodide-figure {
@@ -289,53 +303,116 @@
 }
 
 /* ── Dark mode support ────────────────────────────────────────────────────── */
+/* Book-theme uses html.dark class. Also support OS-level prefers-color-scheme. */
+
+html.dark .pyodide-wrapper {
+  border-color: #30363d;
+  background: #0d1117;
+}
+
+html.dark .pyodide-header,
+html.dark .pyodide-status-bar {
+  background: #161b22;
+  border-color: #30363d;
+}
+
+html.dark .pyodide-lang-badge { color: #8b949e; }
+
+html.dark .pyodide-btn-clear {
+  background: #21262d;
+  color: #c9d1d9;
+  border-color: #30363d;
+}
+html.dark .pyodide-btn-clear:hover:not(:disabled) { background: #30363d; }
+
+html.dark .pyodide-btn-restart {
+  background: #9e6a03;
+  border-color: #30363d;
+}
+html.dark .pyodide-btn-restart:hover:not(:disabled) { background: #b07d09; }
+
+html.dark .pyodide-btn-launch {
+  background: #1f6feb;
+  border-color: #30363d;
+}
+html.dark .pyodide-btn-launch:hover:not(:disabled) { background: #388bfd; }
+
+html.dark .CodeMirror.cm-s-pyodide-theme {
+  background: #0d1117;
+  color: #c9d1d9;
+}
+
+html.dark .cm-s-pyodide-theme .CodeMirror-gutters {
+  background: #161b22;
+  border-color: #30363d;
+  color: #484f58;
+}
+
+html.dark .cm-s-pyodide-theme .CodeMirror-cursor { border-left-color: #58a6ff; }
+html.dark .cm-s-pyodide-theme .CodeMirror-selected { background: #1f3757; }
+html.dark .cm-s-pyodide-theme .cm-keyword   { color: #ff7b72; }
+html.dark .cm-s-pyodide-theme .cm-def       { color: #79c0ff; }
+html.dark .cm-s-pyodide-theme .cm-string,
+html.dark .cm-s-pyodide-theme .cm-string-2  { color: #a5d6ff; }
+html.dark .cm-s-pyodide-theme .cm-number    { color: #a5d6ff; }
+html.dark .cm-s-pyodide-theme .cm-comment   { color: #8b949e; }
+html.dark .cm-s-pyodide-theme .cm-operator  { color: #ff7b72; }
+html.dark .cm-s-pyodide-theme .cm-builtin   { color: #d2a8ff; }
+html.dark .cm-s-pyodide-theme .cm-atom,
+html.dark .cm-s-pyodide-theme .cm-variable-2 { color: #79c0ff; }
+
+html.dark .pyodide-fallback-textarea { background: #0d1117; color: #c9d1d9; }
+
+html.dark .pyodide-output { background: #0d1117; border-color: #30363d; }
+html.dark .pyodide-output pre { color: #c9d1d9 !important; }
+html.dark .pyodide-stdout,
+html.dark .pyodide-return-value { color: #c9d1d9; }
+
+html.dark .pyodide-stderr {
+  color: #e3b341;
+  background: #272115 !important;
+  border-left-color: #9e6a03;
+}
+html.dark .pyodide-error {
+  color: #ffa198;
+  background: #1e0a0a !important;
+  border-left-color: #f85149;
+}
+
+html.dark div.pyodide-cell:not([data-pyodide-transformed])::before {
+  background: #161b22;
+  border-color: #30363d;
+  color: #58a6ff;
+}
+
+/* Fallback: OS-level dark preference (mirrors html.dark rules above) */
 @media (prefers-color-scheme: dark) {
   .pyodide-wrapper {
     border-color: #30363d;
     background: #0d1117;
   }
-
   .pyodide-header,
   .pyodide-status-bar {
     background: #161b22;
     border-color: #30363d;
   }
-
   .pyodide-lang-badge { color: #8b949e; }
-
   .pyodide-btn-clear {
     background: #21262d;
     color: #c9d1d9;
     border-color: #30363d;
   }
-
   .pyodide-btn-clear:hover:not(:disabled) { background: #30363d; }
-
-  .pyodide-btn-restart {
-    background: #9e6a03;
-    border-color: #30363d;
-  }
-
+  .pyodide-btn-restart { background: #9e6a03; border-color: #30363d; }
   .pyodide-btn-restart:hover:not(:disabled) { background: #b07d09; }
-
-  .pyodide-btn-launch {
-    background: #1f6feb;
-    border-color: #30363d;
-  }
-
+  .pyodide-btn-launch { background: #1f6feb; border-color: #30363d; }
   .pyodide-btn-launch:hover:not(:disabled) { background: #388bfd; }
-
-  .CodeMirror.cm-s-pyodide-theme {
-    background: #0d1117;
-    color: #c9d1d9;
-  }
-
+  .CodeMirror.cm-s-pyodide-theme { background: #0d1117; color: #c9d1d9; }
   .cm-s-pyodide-theme .CodeMirror-gutters {
     background: #161b22;
     border-color: #30363d;
     color: #484f58;
   }
-
   .cm-s-pyodide-theme .CodeMirror-cursor { border-left-color: #58a6ff; }
   .cm-s-pyodide-theme .CodeMirror-selected { background: #1f3757; }
   .cm-s-pyodide-theme .cm-keyword   { color: #ff7b72; }
@@ -348,23 +425,25 @@
   .cm-s-pyodide-theme .cm-builtin   { color: #d2a8ff; }
   .cm-s-pyodide-theme .cm-atom      { color: #79c0ff; }
   .cm-s-pyodide-theme .cm-variable-2 { color: #79c0ff; }
-
   .pyodide-fallback-textarea { background: #0d1117; color: #c9d1d9; }
-
   .pyodide-output { background: #0d1117; border-color: #30363d; }
+  .pyodide-output pre { color: #c9d1d9 !important; }
   .pyodide-stdout,
   .pyodide-return-value { color: #c9d1d9; }
-
   .pyodide-stderr {
     color: #e3b341;
-    background: #272115;
+    background: #272115 !important;
     border-left-color: #9e6a03;
   }
-
   .pyodide-error {
     color: #ffa198;
-    background: #1e0a0a;
+    background: #1e0a0a !important;
     border-left-color: #f85149;
+  }
+  div.pyodide-cell:not([data-pyodide-transformed])::before {
+    background: #161b22;
+    border-color: #30363d;
+    color: #58a6ff;
   }
 }
 
@@ -375,8 +454,6 @@
 }
 
 /* ── Pre-transform loading indicator ──────────────────────────────────────── */
-/* Before JS transforms the cell, show a subtle indicator that it will become
-   interactive. This covers the ~1-2s delay while waiting for React hydration. */
 div.pyodide-cell:not([data-pyodide-transformed]) {
   position: relative;
 }
@@ -393,12 +470,4 @@ div.pyodide-cell:not([data-pyodide-transformed])::before {
   font-weight: 600;
   color: #0550ae;
   letter-spacing: 0.02em;
-}
-
-@media (prefers-color-scheme: dark) {
-  div.pyodide-cell:not([data-pyodide-transformed])::before {
-    background: #161b22;
-    border-color: #30363d;
-    color: #58a6ff;
-  }
 }
