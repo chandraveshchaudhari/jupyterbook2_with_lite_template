@@ -54,6 +54,7 @@ jobs:
         run: |
           cd templates/site/myst/book-theme
           npm install
+          npx turbo run build
           cd themes/book
           npx remix build
 
