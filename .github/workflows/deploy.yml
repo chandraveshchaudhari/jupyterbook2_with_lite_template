@@ -36,10 +36,10 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Set up Node.js 24
+      - name: Set up Node.js 22 LTS
         uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: "22"
 
       - name: Install Jupyter Book (via myst)
         run: npm install -g jupyter-book
@@ -56,6 +56,7 @@ jobs:
           npm install
           npx turbo run build
           cd themes/book
+          cp remix.config.prod.js remix.config.js
           npx tailwindcss -c tailwind.config.js -i styles/app.css -o app/styles/app.css --minify
           npx remix build
 
