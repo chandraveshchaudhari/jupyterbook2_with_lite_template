@@ -66,5 +66,6 @@ site:
     folders: true          # generates clean /page/ URLs
     # logo_dark: media/images/banner_image_dark.png
     style: media/custom.css   # custom fonts, layout, fullscreen, scrollable output
+    base_url: /jupyterbook2_with_lite_template/ 
     # outline_maxdepth: 2          # right-side outline depth (keeps it concise)
     # hide_outline: true         # un-comment to fully hide the right outline
