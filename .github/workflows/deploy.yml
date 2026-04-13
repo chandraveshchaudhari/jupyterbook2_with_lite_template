@@ -50,7 +50,14 @@ jobs:
       - name: Build site content (downloads theme)
         run: jupyter-book build --site
 
-      - name: Patch theme with Pyodide/CodeMirror assets
+      - name: Install theme dependencies and rebuild with PyodideCell component
+        run: |
+          cd templates/site/myst/book-theme
+          npm install
+          cd themes/book
+          npx remix build
+
+      - name: Patch theme with custom build and static assets
         run: python patch_theme.py
 
       - name: Build static HTML site

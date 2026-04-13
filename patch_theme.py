@@ -1,18 +1,22 @@
 #!/usr/bin/env python3
 """
-patch_theme.py — Patch the stock MyST book-theme to inject Pyodide/CodeMirror
-scripts and CSS into the <head> of every page, and copy static assets to the
-theme's public directory so they are served via Express.
+patch_theme.py — Replace the stock MyST book-theme build with our custom-rebuilt
+version that includes the PyodideCell React component, and copy static assets
+(CodeMirror, Pyodide runner/transform, CSS) to the theme's public directory.
 
-Run this after `myst start` downloads a fresh theme (i.e. when
-_build/templates/site/myst/book-theme/ is regenerated).
+The custom theme was built with `npx remix build` from the modified source at
+templates/site/myst/book-theme/themes/book/ which includes:
+  - PyodideCell.tsx React component (renders pyodide-cell directives natively)
+  - root.tsx with <head> CSS/script injections (no fragile regex patching needed)
+
+Run this after `jupyter-book build --site` (i.e. when the stock theme is
+extracted to _build/templates/site/myst/book-theme/).
 
 Usage:
     python patch_theme.py
 """
 
 import os
-import re
 import shutil
 import sys
 
@@ -21,26 +25,29 @@ PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 THEME_DIR = os.path.join(
     PROJECT_ROOT, "_build", "templates", "site", "myst", "book-theme"
 )
-BUILD_JS = os.path.join(THEME_DIR, "build", "index.js")
-PUBLIC_STATIC = os.path.join(THEME_DIR, "public", "_static")
 SRC_STATIC = os.path.join(PROJECT_ROOT, "_static")
+
+# Rebuilt theme (from `npx remix build` in themes/book/)
+REBUILT_THEME = os.path.join(
+    PROJECT_ROOT, "templates", "site", "myst", "book-theme", "themes", "book"
+)
 
 
 def copy_static_assets():
     """Copy _static/ tree into the theme's public/_static/ directory."""
+    public_static = os.path.join(THEME_DIR, "public", "_static")
     if not os.path.isdir(SRC_STATIC):
         print(f"ERROR: Source directory not found: {SRC_STATIC}")
         sys.exit(1)
 
-    # Subdirectories to copy
     dirs_to_copy = ["codemirror"]
     files_to_copy = ["pyodide-runner.js", "pyodide-transform.js", "pyodide.css"]
 
-    os.makedirs(PUBLIC_STATIC, exist_ok=True)
+    os.makedirs(public_static, exist_ok=True)
 
     for fname in files_to_copy:
         src = os.path.join(SRC_STATIC, fname)
-        dst = os.path.join(PUBLIC_STATIC, fname)
+        dst = os.path.join(public_static, fname)
         if os.path.isfile(src):
             shutil.copy2(src, dst)
             print(f"  Copied {fname}")
@@ -49,7 +56,7 @@ def copy_static_assets():
 
     for dname in dirs_to_copy:
         src_dir = os.path.join(SRC_STATIC, dname)
-        dst_dir = os.path.join(PUBLIC_STATIC, dname)
+        dst_dir = os.path.join(public_static, dname)
         if os.path.isdir(src_dir):
             os.makedirs(dst_dir, exist_ok=True)
             for fname in os.listdir(src_dir):
@@ -62,53 +69,35 @@ def copy_static_assets():
             print(f"  WARNING: {src_dir} not found")
 
 
-def patch_build_js():
-    """Inject CSS <link> and <script defer> tags into the theme's <head>."""
-    if not os.path.isfile(BUILD_JS):
-        print(f"ERROR: {BUILD_JS} not found. Run `myst start` first.")
+def replace_theme_build():
+    """Replace the extracted stock theme's build with our custom-rebuilt version.
+
+    This copies:
+      - build/index.js  (Remix server bundle with PyodideCell component)
+      - public/build/    (Remix client bundles with PyodideCell component)
+    """
+    src_server = os.path.join(REBUILT_THEME, "build", "index.js")
+    dst_server = os.path.join(THEME_DIR, "build", "index.js")
+
+    src_public_build = os.path.join(REBUILT_THEME, "public", "build")
+    dst_public_build = os.path.join(THEME_DIR, "public", "build")
+
+    if not os.path.isfile(src_server):
+        print(f"ERROR: Rebuilt server bundle not found: {src_server}")
+        print("       Run `cd templates/site/myst/book-theme/themes/book && npx remix build` first.")
         sys.exit(1)
 
-    with open(BUILD_JS, "r") as f:
-        content = f.read()
+    # Replace server bundle
+    os.makedirs(os.path.dirname(dst_server), exist_ok=True)
+    shutil.copy2(src_server, dst_server)
+    print(f"  Copied build/index.js (server bundle)")
 
-    # Check if already patched
-    if "pyodide-runner" in content:
-        print("  build/index.js already patched — skipping.")
-        return
-
-    # Find the head-children closing pattern after myst-theme.css link
-    pattern = re.search(r'myst-theme\.css`\}\)(\]\}\)),', content)
-    if not pattern:
-        print("ERROR: Could not find injection point in build/index.js")
-        print("       The theme version may have changed. Manual patching needed.")
-        sys.exit(1)
-
-    close_pos = content.find("]}),", pattern.start())
-
-    # Inject CSS <link> and <script defer> tags using the BASE_URL variable
-    # already in scope (variable `i`). This renders correctly in React SSR
-    # and works for both local dev (i="") and GitHub Pages (i="/repo-name").
-    injected = (
-        ","
-        '(0,K2.jsx)("link",{rel:"stylesheet",href:`${i||""}/_static/codemirror/codemirror.css`})'
-        ","
-        '(0,K2.jsx)("link",{rel:"stylesheet",href:`${i||""}/_static/pyodide.css`})'
-        ","
-        '(0,K2.jsx)("script",{src:`${i||""}/_static/codemirror/codemirror.js`,defer:true})'
-        ","
-        '(0,K2.jsx)("script",{src:`${i||""}/_static/codemirror/python.js`,defer:true})'
-        ","
-        '(0,K2.jsx)("script",{src:`${i||""}/_static/pyodide-runner.js`,defer:true})'
-        ","
-        '(0,K2.jsx)("script",{src:`${i||""}/_static/pyodide-transform.js`,defer:true})'
-    )
-
-    content = content[:close_pos] + injected + content[close_pos:]
-
-    with open(BUILD_JS, "w") as f:
-        f.write(content)
-
-    print("  build/index.js patched successfully.")
+    # Replace client bundles (clear old, copy new)
+    if os.path.isdir(dst_public_build):
+        shutil.rmtree(dst_public_build)
+    shutil.copytree(src_public_build, dst_public_build)
+    n_files = sum(len(files) for _, _, files in os.walk(dst_public_build))
+    print(f"  Copied public/build/ ({n_files} files, client bundles)")
 
 
 def main():
@@ -118,18 +107,18 @@ def main():
 
     if not os.path.isdir(THEME_DIR):
         print("ERROR: Theme directory not found.")
-        print("       Run `myst start` once to download the book-theme first.")
+        print("       Run `jupyter-book build --site` to download the theme first.")
         sys.exit(1)
 
-    print("Step 1: Copying static assets to theme public directory...")
+    print("Step 1: Replacing theme build with custom PyodideCell version...")
+    replace_theme_build()
+    print()
+
+    print("Step 2: Copying static assets to theme public directory...")
     copy_static_assets()
     print()
 
-    print("Step 2: Patching build/index.js to inject <head> tags...")
-    patch_build_js()
-    print()
-
-    print("Done! Restart `myst start` (without --headless) to pick up changes.")
+    print("Done! The theme now includes the PyodideCell React component.")
 
 
 if __name__ == "__main__":

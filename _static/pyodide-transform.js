@@ -1,25 +1,17 @@
 /**
  * pyodide-transform.js
  *
- * Finds all <div class="pyodide-cell"> elements rendered by the MyST plugin.
- * Each div contains a <pre><code> block with the Python source. This script
- * replaces those divs with fully interactive UI:
- *   - CodeMirror 5 editor (editable, syntax-highlighted)
- *   - Run button  |  Clear button  (per cell)
- *   - Rocket launcher toolbar (page-level: Restart Kernel, Try Jupyter, Colab)
- *   - Scrollable output (stdout + stderr + matplotlib figures)
- *   - Execution time display
+ * Provides interactive Pyodide cells with CodeMirror editor, Run/Clear buttons,
+ * rocket launcher toolbar, scrollable output, and execution timing.
  *
- * IMPORTANT: The MyST book-theme uses Remix (React). React hydrates the page
- * after the initial server-rendered HTML loads, which can undo DOM changes
- * made before hydration completes. This script therefore:
- *   1. Does NOT modify the DOM immediately on load
- *   2. Waits for React hydration to settle (via requestIdleCallback + delay)
- *   3. Uses polling to re-transform cells if React undoes transformations
- *   4. Uses a debounced MutationObserver for client-side (SPA) navigation
- *   5. Hides original placeholder (not replaceWith) so React reconciliation
- *      does not destroy our wrapper
- *   6. Appends the rocket toolbar to document.body so React cannot remove it
+ * PRIMARY path (React component): The book-theme registers a PyodideCellRenderer
+ * React component for `div[class=pyodide-cell]` AST nodes. That component renders
+ * an empty container and calls `window.__initPyodideCell(el, code, cellId)` from
+ * useEffect. This avoids any React hydration conflicts.
+ *
+ * FALLBACK path (DOM mutation): For any `div.pyodide-cell` elements that weren't
+ * handled by the React component (e.g. raw HTML pages), this script also runs
+ * the old polling-based transform as a safety net.
  */
 
 (function () {
@@ -455,7 +447,248 @@
     clearBtn.addEventListener('click', clearOutput);
   }
 
-  // ── Transform all un-transformed cells ─────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════════════════════
+  // PUBLIC API — called by PyodideCellRenderer React component via useEffect
+  // ══════════════════════════════════════════════════════════════════════════════
+  /**
+   * Initialize an interactive Pyodide cell inside the given container element.
+   * Called by the React component after hydration — no DOM conflicts possible.
+   *
+   * @param {HTMLElement} container - Empty div to populate (React component's ref)
+   * @param {string} code - Python source code
+   * @param {string} cellId - Unique cell identifier
+   */
+  function initPyodideCell(container, code, cellId) {
+    if (!code || !code.trim()) return;
+    // Prevent double-init
+    if (container.dataset.pyodideInitialized === 'done') return;
+    container.dataset.pyodideInitialized = 'done';
+
+    // Add the wrapper class so existing CSS applies
+    container.classList.add('pyodide-wrapper');
+
+    var uid = cellId ? ('pycell-' + cellId) : null;
+    if (uid && !container.id) container.id = uid;
+
+    var header = document.createElement('div');
+    header.className = 'pyodide-header';
+
+    var badge = document.createElement('span');
+    badge.className = 'pyodide-lang-badge';
+    badge.textContent = 'Python';
+
+    var controls = document.createElement('div');
+    controls.className = 'pyodide-controls';
+
+    var runBtn = document.createElement('button');
+    runBtn.type = 'button';
+    runBtn.className = 'pyodide-btn pyodide-btn-run';
+    runBtn.title = 'Run (Shift+Enter)';
+    runBtn.innerHTML =
+      '<svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor">' +
+      '<path d="M3 2.5l10 5.5-10 5.5V2.5z"/></svg> Run';
+
+    var clearBtn = document.createElement('button');
+    clearBtn.type = 'button';
+    clearBtn.className = 'pyodide-btn pyodide-btn-clear';
+    clearBtn.title = 'Clear output';
+    clearBtn.textContent = 'Clear';
+
+    controls.appendChild(runBtn);
+    controls.appendChild(clearBtn);
+    header.appendChild(badge);
+    header.appendChild(controls);
+
+    var editorContainer = document.createElement('div');
+    editorContainer.className = 'pyodide-editor-container';
+
+    var textarea = document.createElement('textarea');
+    textarea.value = code;
+    textarea.setAttribute('aria-label', 'Python code editor');
+    editorContainer.appendChild(textarea);
+
+    var statusBar = document.createElement('div');
+    statusBar.className = 'pyodide-status-bar';
+
+    var statusText = document.createElement('span');
+    statusText.className = 'pyodide-status-text';
+
+    var timingSpan = document.createElement('span');
+    timingSpan.className = 'pyodide-timing';
+
+    statusBar.appendChild(statusText);
+    statusBar.appendChild(timingSpan);
+
+    var outputArea = document.createElement('div');
+    outputArea.className = 'pyodide-output';
+    outputArea.setAttribute('aria-live', 'polite');
+    outputArea.hidden = true;
+
+    container.appendChild(header);
+    container.appendChild(editorContainer);
+    container.appendChild(statusBar);
+    container.appendChild(outputArea);
+
+    // CodeMirror 5
+    var cm = null;
+    if (typeof CodeMirror !== 'undefined') {
+      try {
+        cm = CodeMirror.fromTextArea(textarea, {
+          mode: 'python',
+          theme: 'pyodide-theme',
+          lineNumbers: true,
+          indentUnit: 4,
+          smartIndent: true,
+          matchBrackets: true,
+          lineWrapping: false,
+          viewportMargin: 20,
+          extraKeys: {
+            'Shift-Enter': function () { runCode(); },
+            'Tab': function (cmInst) {
+              if (cmInst.somethingSelected()) {
+                cmInst.indentSelection('add');
+              } else {
+                cmInst.replaceSelection('    ', 'end');
+              }
+            },
+          },
+        });
+        cm.setSize(null, null);
+      } catch (err) {
+        console.warn('[pyodide-transform] CodeMirror init failed:', err);
+        cm = null;
+      }
+    }
+
+    if (!cm) {
+      textarea.className = 'pyodide-fallback-textarea';
+      textarea.rows = Math.max(4, code.split('\n').length + 1);
+      textarea.spellcheck = false;
+    }
+
+    function getCode() { return cm ? cm.getValue() : textarea.value; }
+
+    function setStatus(msg, type) {
+      statusText.textContent = msg;
+      statusText.className = 'pyodide-status-text pyodide-status-' + (type || 'info');
+    }
+
+    function setTiming(ms) {
+      timingSpan.textContent = ms != null ? (ms + ' ms') : '';
+    }
+
+    function renderOutput(result) {
+      outputArea.innerHTML = '';
+      outputArea.hidden = false;
+      var hasContent = false;
+
+      if (result.stdout) {
+        hasContent = true;
+        var pre1 = document.createElement('pre');
+        pre1.className = 'pyodide-stdout';
+        pre1.textContent = result.stdout;
+        outputArea.appendChild(pre1);
+      }
+      if (result.stderr) {
+        hasContent = true;
+        var pre2 = document.createElement('pre');
+        pre2.className = 'pyodide-stderr';
+        pre2.textContent = result.stderr;
+        outputArea.appendChild(pre2);
+      }
+      if (result.error) {
+        hasContent = true;
+        var pre3 = document.createElement('pre');
+        pre3.className = 'pyodide-error';
+        pre3.textContent = result.error;
+        outputArea.appendChild(pre3);
+      }
+      if (result.returnValue && !result.error) {
+        hasContent = true;
+        var pre4 = document.createElement('pre');
+        pre4.className = 'pyodide-return-value';
+        pre4.textContent = result.returnValue;
+        outputArea.appendChild(pre4);
+      }
+      var figures = result.figures || [];
+      for (var i = 0; i < figures.length; i++) {
+        hasContent = true;
+        var img = document.createElement('img');
+        img.src = figures[i];
+        img.className = 'pyodide-figure';
+        img.alt = 'matplotlib figure';
+        outputArea.appendChild(img);
+      }
+      if (!hasContent) { outputArea.hidden = true; }
+    }
+
+    function clearOutput() {
+      outputArea.innerHTML = '';
+      outputArea.hidden = true;
+      setStatus('', 'info');
+      setTiming(null);
+    }
+
+    function runCode() {
+      if (!window.PyodideRunner) {
+        setStatus('PyodideRunner not loaded', 'error');
+        return;
+      }
+      runBtn.disabled = true;
+      clearOutput();
+
+      (async function () {
+        if (_pyodideLoadState === 'idle') {
+          _pyodideLoadState = 'loading';
+          setStatus('Loading Pyodide (first run, may take a few seconds)\u2026', 'info');
+          try {
+            await window.PyodideRunner.load();
+            _pyodideLoadState = 'ready';
+          } catch (err) {
+            _pyodideLoadState = 'error';
+            _pyodideLoadError = String(err);
+          }
+        } else if (_pyodideLoadState === 'loading') {
+          setStatus('Waiting for Pyodide\u2026', 'info');
+          while (_pyodideLoadState === 'loading') {
+            await new Promise(function (r) { setTimeout(r, 200); });
+          }
+        }
+
+        if (_pyodideLoadState === 'error') {
+          setStatus('Failed to load Pyodide: ' + _pyodideLoadError, 'error');
+          runBtn.disabled = false;
+          return;
+        }
+
+        setStatus('Running\u2026', 'info');
+
+        try {
+          var result = await window.PyodideRunner.execute(getCode(), container);
+          renderOutput(result);
+          setTiming(result.durationMs);
+          setStatus(
+            result.error ? 'Error' : 'Done',
+            result.error ? 'error' : 'success'
+          );
+        } catch (err) {
+          setStatus('Error: ' + err, 'error');
+        }
+        runBtn.disabled = false;
+      })();
+    }
+
+    runBtn.addEventListener('click', runCode);
+    clearBtn.addEventListener('click', clearOutput);
+
+    // Also build the rocket toolbar if not already present
+    buildRocketToolbar();
+  }
+
+  // Expose as global for the React component
+  window.__initPyodideCell = initPyodideCell;
+
+  // ── Transform all un-transformed cells (FALLBACK for non-React pages) ──────
   function transformAllCells() {
     var cells = document.querySelectorAll('div.pyodide-cell');
     for (var i = 0; i < cells.length; i++) {
@@ -478,12 +711,18 @@
 
   // ── Bootstrap ──────────────────────────────────────────────────────────────
   function boot() {
+    // Always build the rocket toolbar on pages with pyodide cells
+    var hasCells = document.querySelectorAll('div.pyodide-cell, .pyodide-cell-react').length > 0;
+    if (hasCells) buildRocketToolbar();
+
+    // Watch for SPA navigation (new cells appearing)
     watchForCells();
 
+    // Fallback: transform any div.pyodide-cell elements not handled by React
     function startTransformCycle() {
       transformAllCells();
       var polls = 0;
-      var maxPolls = 30;
+      var maxPolls = 15;
       var pollId = setInterval(function () {
         transformAllCells();
         if (++polls >= maxPolls) clearInterval(pollId);

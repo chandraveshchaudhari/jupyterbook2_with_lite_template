@@ -526,6 +526,38 @@ div.pyodide-cell[data-pyodide-transformed="done"] {
   display: none !important;
 }
 
+/* ── React component: loading state ───────────────────────────────────────── */
+/* The PyodideCellRenderer renders an empty div.pyodide-cell-react.
+   While JS hasn't initialized it yet, show a loading indicator. */
+.pyodide-cell-react:not(.pyodide-wrapper) {
+  position: relative;
+  min-height: 80px;
+  border: 1px solid var(--color-border, #c8d1da);
+  border-radius: 6px;
+  background: #f0f6fc;
+  grid-column: body;
+}
+
+.pyodide-cell-react:not(.pyodide-wrapper)::before {
+  content: '\25B6  Interactive Python \2014 loading editor\2026';
+  display: block;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #0550ae;
+  letter-spacing: 0.02em;
+  animation: pyodide-pulse 1.5s ease-in-out infinite;
+}
+
+html.dark .pyodide-cell-react:not(.pyodide-wrapper) {
+  background: #161b22;
+  border-color: #30363d;
+}
+
+html.dark .pyodide-cell-react:not(.pyodide-wrapper)::before {
+  color: #58a6ff;
+}
+
 div.pyodide-cell:not([data-pyodide-transformed])::before {
   content: '▶ Interactive Python — loading editor…';
   display: block;

@@ -23,13 +23,21 @@ import { SEARCH_ATTRIBUTES_ORDERED } from '@myst-theme/search';
 import { JUPYTER_RENDERERS } from '@myst-theme/jupyter';
 import { LANDING_PAGE_RENDERERS } from '@myst-theme/landing-pages';
 import { ANY_RENDERERS } from '@myst-theme/anywidget';
+import { PyodideCellRenderer } from './components/PyodideCell';
 import { useCallback } from 'react';
+
+const PYODIDE_RENDERERS: NodeRenderers = {
+  div: {
+    'div[class=pyodide-cell]': PyodideCellRenderer,
+  },
+};
 
 const RENDERERS: NodeRenderers = mergeRenderers([
   defaultRenderers,
   JUPYTER_RENDERERS,
   LANDING_PAGE_RENDERERS,
   ANY_RENDERERS,
+  PYODIDE_RENDERERS,
 ]);
 
 export const meta: V2_MetaFunction<typeof loader> = ({ data }) => {
