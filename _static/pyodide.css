@@ -22,6 +22,7 @@
   font-size: 0.875rem;
   background: var(--color-background-primary, #fff);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  grid-column: body; /* explicit placement in book-theme article grid */
 }
 
 /* ── Header bar ───────────────────────────────────────────────────────────── */
@@ -505,23 +506,37 @@ html.dark div.pyodide-cell:not([data-pyodide-transformed])::before {
   outline-offset: 2px;
 }
 
-/* ── Pre-transform loading indicator ──────────────────────────────────────── */
+/* ── Pre-transform: prevent FOUC ──────────────────────────────────────────── */
+/* Hide the MyST-rendered code block inside pyodide-cell BEFORE our JS
+   transforms it. This prevents the raw code + copy button from flashing
+   briefly, which causes visual "scatter" on page load. */
 div.pyodide-cell:not([data-pyodide-transformed]) {
   position: relative;
+  grid-column: body; /* explicit placement in article-grid */
+}
+
+div.pyodide-cell:not([data-pyodide-transformed]) > .myst-code,
+div.pyodide-cell:not([data-pyodide-transformed]) > div {
+  display: none !important; /* hide raw code/copy btn to prevent FOUC */
 }
 
 div.pyodide-cell:not([data-pyodide-transformed])::before {
-  content: 'Interactive — loading editor...';
+  content: '▶ Interactive Python — loading editor…';
   display: block;
-  padding: 0.35rem 0.75rem;
+  padding: 0.6rem 0.75rem;
   background: #f0f6fc;
   border: 1px solid #c8d1da;
-  border-bottom: none;
-  border-radius: 6px 6px 0 0;
-  font-size: 0.75rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
   font-weight: 600;
   color: #0550ae;
   letter-spacing: 0.02em;
+  animation: pyodide-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pyodide-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
 }
 
 /* ── Responsive: adjust rocket on small screens ───────────────────────────── */

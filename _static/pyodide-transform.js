@@ -205,7 +205,7 @@
     if (stale) stale.remove();
 
     var wrapper = document.createElement('div');
-    wrapper.className = 'pyodide-wrapper not-prose';
+    wrapper.className = 'pyodide-wrapper not-prose col-body';
     wrapper.id = uid;
     wrapper.setAttribute('role', 'region');
     wrapper.setAttribute('aria-label', 'Interactive Python cell');
@@ -464,10 +464,10 @@
 
     if (window.requestIdleCallback) {
       window.requestIdleCallback(function () {
-        setTimeout(startTransformCycle, 800);
-      }, { timeout: 3000 });
+        setTimeout(startTransformCycle, 200);
+      }, { timeout: 2000 });
     } else {
-      setTimeout(startTransformCycle, 2000);
+      setTimeout(startTransformCycle, 600);
     }
   }
 
