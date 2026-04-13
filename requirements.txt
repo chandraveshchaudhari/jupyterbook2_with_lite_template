@@ -8,3 +8,4 @@ PyYAML>=6.0
 
 # For in-browser execution and building JupyterLite assets
 jupyterlite>=0.1
+jupyterlite-pyodide-kernel

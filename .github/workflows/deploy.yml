@@ -56,6 +56,19 @@ jobs:
       - name: Build static HTML site
         run: jupyter-book build --html
 
+      - name: Build JupyterLite (standalone lab)
+        run: |
+          # Determine the HTML output directory
+          if [ -d "_build/html" ]; then
+            OUTDIR="_build/html/jupyterlite"
+          elif [ -d "_build/site/public" ]; then
+            OUTDIR="_build/site/public/jupyterlite"
+          else
+            OUTDIR="_build/html/jupyterlite"
+            mkdir -p _build/html
+          fi
+          jupyter lite build --contents notebooks/ --output-dir "$OUTDIR"
+
       - name: Detect build output
         id: detect
         run: |

@@ -520,6 +520,12 @@ div.pyodide-cell:not([data-pyodide-transformed]) > div {
   display: none !important; /* hide raw code/copy btn to prevent FOUC */
 }
 
+/* Keep the placeholder hidden AFTER transform, even if React hydration
+   resets the inline style. CSS !important overrides React's reconciliation. */
+div.pyodide-cell[data-pyodide-transformed="done"] {
+  display: none !important;
+}
+
 div.pyodide-cell:not([data-pyodide-transformed])::before {
   content: '▶ Interactive Python — loading editor…';
   display: block;

@@ -49,6 +49,16 @@
     return { owner: match[1], repo: match[2], branch: match[3], path: match[4] };
   }
 
+  // ── Helper: get site base path (handles GitHub Pages /{repo}/ prefix) ──────
+  function getSiteBase() {
+    var hostname = window.location.hostname;
+    if (hostname.endsWith('.github.io')) {
+      var parts = window.location.pathname.split('/').filter(Boolean);
+      return parts.length > 0 ? '/' + parts[0] : '';
+    }
+    return ''; // custom domain — no base path
+  }
+
   // ══════════════════════════════════════════════════════════════════════════════
   // ROCKET TOOLBAR — page-level floating launcher (Restart, Try Jupyter, Colab)
   // ══════════════════════════════════════════════════════════════════════════════
@@ -113,12 +123,16 @@
     // Set URLs based on source file
     function updateLinks() {
       var info = getSourceInfo();
+      var siteBase = getSiteBase();
+      var liteLabUrl = siteBase + '/jupyterlite/lab/index.html';
+
       if (info && info.path.endsWith('.ipynb')) {
-        var rawUrl = 'https://raw.githubusercontent.com/' + info.owner + '/' + info.repo + '/' + info.branch + '/' + info.path;
-        jupyterItem.href = 'https://jupyter.org/try-jupyter/lab/index.html?fromURL=' + encodeURIComponent(rawUrl);
+        // Strip leading "notebooks/" since JupyterLite contents are built from that dir
+        var litePath = info.path.replace(/^notebooks\//, '');
+        jupyterItem.href = liteLabUrl + '?path=' + encodeURIComponent(litePath);
         colabItem.href = 'https://colab.research.google.com/github/' + info.owner + '/' + info.repo + '/blob/' + info.branch + '/' + info.path;
       } else {
-        jupyterItem.href = 'https://jupyter.org/try-jupyter/lab/index.html';
+        jupyterItem.href = liteLabUrl;
         colabItem.href = 'https://colab.research.google.com/#create=true&language=python';
       }
     }
@@ -190,7 +204,21 @@
   // CELL BUILDER
   // ══════════════════════════════════════════════════════════════════════════════
   function buildCell(placeholder) {
-    if (placeholder.dataset.pyodideTransformed === 'done') return;
+    // Guard: if already transformed, verify our wrapper survived React hydration.
+    // React hydration can remove the wrapper sibling while keeping the data attribute,
+    // which causes buildCell to skip and leaves raw code visible ("scatter").
+    if (placeholder.dataset.pyodideTransformed === 'done') {
+      var checkId = placeholder.id;
+      if (checkId) {
+        var expectedWrapper = document.getElementById('pycell-' + checkId);
+        if (expectedWrapper) return; // wrapper intact — skip
+      } else {
+        return; // no stable ID to verify — assume OK
+      }
+      // Wrapper was destroyed by React hydration — reset for re-transform
+      placeholder.removeAttribute('data-pyodide-transformed');
+      placeholder.style.display = '';
+    }
 
     var data = extractCellData(placeholder);
     var rawCode = data.rawCode;
