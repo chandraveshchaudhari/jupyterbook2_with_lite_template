@@ -1,7 +1,7 @@
 # JupyterBook v2 (MyST) + JupyterLite Template
 
 <p align="center">
-	<img src="images/banner_image.png" alt="Book banner" width="100%" />
+	<img src="media/images/banner_image.png" alt="Book banner" width="100%" />
 </p>
 
 <p align="center">
