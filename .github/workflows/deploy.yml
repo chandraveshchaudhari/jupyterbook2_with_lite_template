@@ -70,11 +70,11 @@ jobs:
         run: |
           # Determine the HTML output directory
           if [ -d "_build/html" ]; then
-            OUTDIR="_build/html"                    # ← CHANGED: now builds directly to root
+            OUTDIR="_build/html/jupyterlite"
           elif [ -d "_build/site/public" ]; then
-            OUTDIR="_build/site/public"
+            OUTDIR="_build/site/public/jupyterlite"
           else
-            OUTDIR="_build/html"
+            OUTDIR="_build/html/jupyterlite"
             mkdir -p _build/html
           fi
           jupyter lite build --contents notebooks/ --output-dir "$OUTDIR"
