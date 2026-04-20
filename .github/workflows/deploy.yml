@@ -77,7 +77,7 @@ jobs:
             OUTDIR="_build/html/jupyterlite"
             mkdir -p _build/html
           fi
-          jupyter lite build --contents notebooks/ --output-dir "$OUTDIR"
+          jupyter lite build --contents notebooks/ --output-dir "$OUTDIR" --base-url ./jupyterlite/
 
       - name: Detect build output
         id: detect
