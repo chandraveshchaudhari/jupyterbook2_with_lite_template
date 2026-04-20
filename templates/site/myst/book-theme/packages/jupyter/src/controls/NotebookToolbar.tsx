@@ -9,12 +9,14 @@ import { useThebeServer } from 'thebe-react';
 import { PowerIcon } from '@heroicons/react/24/outline';
 import { Spinner } from './Spinner.js';
 import { Clear, Launch, Restart, Run } from './Buttons.js';
+import { useBaseurl } from '@myst-theme/providers';
 import classNames from 'classnames';
 
 export function NotebookToolbar({ showLaunch = false }: { showLaunch?: boolean }) {
   const { slug, ready, state, start, resetAll, clearAll, execute } = useExecutionScope();
   const busy = useBusyScope();
   const { connecting, connect, ready: serverReady, server, error: serverError } = useThebeServer();
+  const siteBase = useBaseurl();
   const computable = selectIsComputable(state, slug);
   const handleStart = () => {
     if (!connect) {
@@ -29,7 +31,29 @@ export function NotebookToolbar({ showLaunch = false }: { showLaunch?: boolean }
   const handleRun = () => execute(slug);
   const handleLaunch = () => {
     if (!serverReady || !server?.settings) return;
-    window.open(`${server.settings.baseUrl}?token=${server.settings.token}`, '_blank');
+
+    // Prefer site base_url (from myst.yml / theme provider), else fallback to server baseUrl
+    let basePath = siteBase && siteBase !== '/' ? siteBase : (server.settings.baseUrl || '');
+    if (!basePath.startsWith('/')) basePath = '/' + basePath;
+    basePath = basePath.replace(/\/+$/, '');
+
+    const origin = window.location.origin.replace(/\/+$/, '');
+
+    // Heuristic: derive notebook filename from current page slug
+    let notebookFile: string | undefined;
+    try {
+      const parts = window.location.pathname.split('/').filter(Boolean);
+      const last = parts[parts.length - 1] || parts[parts.length - 2] || '';
+      if (last) notebookFile = `${last.replace(/-/g, '_')}.ipynb`;
+    } catch (e) {
+      notebookFile = undefined;
+    }
+
+    const tokenParam = server.settings.token ? `&token=${encodeURIComponent(server.settings.token)}` : '';
+    const pathQuery = notebookFile ? `lab/index.html?path=${encodeURIComponent(notebookFile)}` : 'lab/';
+    const launchUrl = `${origin}${basePath}/jupyterlite/${pathQuery}${tokenParam}`;
+
+    window.open(launchUrl, '_blank');
   };
 
   const building = selectAreExecutionScopesBuilding(state, slug);
