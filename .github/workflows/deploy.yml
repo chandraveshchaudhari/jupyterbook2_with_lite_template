@@ -77,7 +77,20 @@ jobs:
             OUTDIR="_build/html/jupyterlite"
             mkdir -p _build/html
           fi
-          jupyter lite build --contents notebooks/ --output-dir "$OUTDIR" --base-url ./jupyterlite/
+          # Normalize BASE_URL (strip trailing slash, ensure leading slash if non-empty)
+          if [ -z "${BASE_URL}" ] || [ "${BASE_URL}" = "/" ]; then
+            LITE_BASE="/jupyterlite/"
+          else
+            BASE_NORM="${BASE_URL%/}"
+            case "$BASE_NORM" in
+              /*) BASE_NORM="$BASE_NORM" ;;
+              *) BASE_NORM="/$BASE_NORM" ;;
+            esac
+            LITE_BASE="${BASE_NORM}/jupyterlite/"
+          fi
+
+          # Build into the site output (keep your OUTDIR)
+          jupyter lite build --contents notebooks/ --output-dir "$OUTDIR" --base-url "$LITE_BASE"
 
       - name: Detect build output
         id: detect
