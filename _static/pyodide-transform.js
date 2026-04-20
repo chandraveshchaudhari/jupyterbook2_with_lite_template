@@ -518,6 +518,8 @@
           },
         });
         cm.setSize(null, null);
+        // register instance for theme-refresh handling
+        try { window._pyodideCodeMirrors.push(cm); } catch (e) { /* noop */ }
       } catch (err) {
         console.warn('[pyodide-transform] CodeMirror init failed:', err);
         cm = null;

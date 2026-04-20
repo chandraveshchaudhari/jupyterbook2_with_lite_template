@@ -1,10 +1,19 @@
 /* =============================================================================
    pyodide.css — Styles for interactive Pyodide cells in MyST JupyterBook v2
+   =============================================================================
+   Theme switching: JupyterBook v2 (MyST / book-theme) toggles the class
+   `light` or `dark` on `<html>`.  ALL dark-mode overrides therefore use
+   `html.dark` selectors.
+
+   IMPORTANT: We intentionally do NOT use a blanket
+   `@media (prefers-color-scheme: dark)` block, because it would conflict
+   when the user explicitly picks "Light" in the book's theme toggle while
+   their OS is set to dark mode.  The only media-query fallback we keep is
+   scoped to `html:not(.light):not(.dark)` so it only fires before JS sets
+   a class (i.e. the brief FOUC window).
    ============================================================================= */
 
 /* ── Tailwind Preflight override ──────────────────────────────────────────── */
-/* Tailwind base sets: svg { display: block; vertical-align: middle; }
-   This breaks inline-flex buttons that contain SVG icons. Override it. */
 .pyodide-wrapper svg {
   display: inline !important;
   vertical-align: middle !important;
@@ -20,8 +29,9 @@
     SFMono-Regular, Menlo, monospace;
   font-size: 0.875rem;
   background: var(--color-background-primary, #fff);
+  color: var(--color-foreground-primary, #1f2328);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  grid-column: body; /* explicit placement in book-theme article grid */
+  grid-column: body;
 }
 
 /* ── Header bar ───────────────────────────────────────────────────────────── */
@@ -60,7 +70,7 @@
   font-size: 0.8rem;
   font-family: inherit;
   cursor: pointer;
-  transition: background 0.12s, border-color 0.12s, opacity 0.12s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, opacity 0.15s;
   line-height: 1;
 }
 
@@ -75,21 +85,14 @@
   border-color: rgba(31, 35, 40, 0.15);
   font-weight: 600;
 }
-
-.pyodide-btn-run:hover:not(:disabled) {
-  background: #2c974b;
-}
-
-.pyodide-btn-run:active:not(:disabled) {
-  background: #298e46;
-}
+.pyodide-btn-run:hover:not(:disabled) { background: #2c974b; }
+.pyodide-btn-run:active:not(:disabled) { background: #298e46; }
 
 .pyodide-btn-clear {
   background: var(--color-background-primary, #fff);
   color: var(--color-foreground-primary, #1f2328);
   border-color: var(--color-border, #d0d7de);
 }
-
 .pyodide-btn-clear:hover:not(:disabled) {
   background: var(--color-background-secondary, #f3f4f6);
 }
@@ -123,7 +126,6 @@
   resize: vertical;
 }
 
-/* Make CodeMirror fill the container naturally */
 .pyodide-editor-container .CodeMirror {
   height: auto;
   min-height: 80px;
@@ -134,42 +136,46 @@
   border-radius: 0;
 }
 
-/* Let the CodeMirror scroll area grow with content */
 .pyodide-editor-container .CodeMirror-scroll {
   min-height: 80px;
 }
 
-/* ── CodeMirror colour theme (pyodide-theme) ──────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════════════
+   CodeMirror colour theme — LIGHT (default)
+   ══════════════════════════════════════════════════════════════════════════════ */
 .CodeMirror.cm-s-pyodide-theme {
   background: var(--color-background-primary, #fafbfc);
-  color: var(--color-foreground-primary, #1f2328);
+  color: #24292f;
 }
 
 .cm-s-pyodide-theme .CodeMirror-gutters {
   background: var(--color-background-secondary, #f0f1f3);
   border-right: 1px solid var(--color-border, #d0d7de);
-  color: var(--color-foreground-muted, #8c959f);
 }
 
 .cm-s-pyodide-theme .CodeMirror-linenumber { color: #8c959f; }
-.cm-s-pyodide-theme .CodeMirror-cursor { border-left: 2px solid #0969da; }
-.cm-s-pyodide-theme .CodeMirror-selected { background: #b3d9ff; }
+.cm-s-pyodide-theme .CodeMirror-cursor     { border-left: 2px solid #0969da; }
+.cm-s-pyodide-theme .CodeMirror-selected   { background: #b3d9ff; }
 
-/* Python syntax colours */
-.cm-s-pyodide-theme .cm-keyword   { color: #cf222e; font-weight: bold; }
-.cm-s-pyodide-theme .cm-def       { color: #0550ae; }
-.cm-s-pyodide-theme .cm-variable  { color: #1f2328; }
-.cm-s-pyodide-theme .cm-variable-2 { color: #0550ae; }
-.cm-s-pyodide-theme .cm-string    { color: #0a3069; }
-.cm-s-pyodide-theme .cm-string-2  { color: #0a3069; }
-.cm-s-pyodide-theme .cm-number    { color: #0a3069; }
-.cm-s-pyodide-theme .cm-comment   { color: #6e7781; font-style: italic; }
-.cm-s-pyodide-theme .cm-operator  { color: #cf222e; }
-.cm-s-pyodide-theme .cm-builtin   { color: #8250df; }
-.cm-s-pyodide-theme .cm-atom      { color: #0550ae; }
-.cm-s-pyodide-theme .cm-meta      { color: #6e7781; }
-.cm-s-pyodide-theme .cm-bracket   { color: #1f2328; }
+/* Syntax — light */
+.cm-s-pyodide-theme .cm-keyword        { color: #cf222e; font-weight: bold; }
+.cm-s-pyodide-theme .cm-def            { color: #0550ae; }
+.cm-s-pyodide-theme .cm-variable       { color: #24292f; }
+.cm-s-pyodide-theme .cm-variable-2     { color: #0550ae; }
+.cm-s-pyodide-theme .cm-string         { color: #0a3069; }
+.cm-s-pyodide-theme .cm-string-2       { color: #0a3069; }
+.cm-s-pyodide-theme .cm-number         { color: #0550ae; }
+.cm-s-pyodide-theme .cm-comment        { color: #6e7781; font-style: italic; }
+.cm-s-pyodide-theme .cm-operator       { color: #cf222e; }
+.cm-s-pyodide-theme .cm-builtin        { color: #8250df; }
+.cm-s-pyodide-theme .cm-atom           { color: #0550ae; }
+.cm-s-pyodide-theme .cm-meta           { color: #6e7781; }
+.cm-s-pyodide-theme .cm-bracket        { color: #24292f; }
+.cm-s-pyodide-theme .cm-property       { color: #0550ae; }
+.cm-s-pyodide-theme .cm-tag            { color: #116329; }
+.cm-s-pyodide-theme .cm-attribute      { color: #0550ae; }
 .cm-s-pyodide-theme .cm-matchhighlight { background: #fff0a6; }
+.cm-s-pyodide-theme .CodeMirror-matchingbracket { color: #24292f; background: #dafbe1; }
 
 /* ── Fallback textarea (when CodeMirror unavailable) ──────────────────────── */
 .pyodide-fallback-textarea {
@@ -178,7 +184,7 @@
   padding: 0.75rem;
   border: none;
   background: var(--color-background-primary, #fafbfc);
-  color: var(--color-foreground-primary, #1f2328);
+  color: var(--color-foreground-primary, #24292f);
   font-family: inherit;
   font-size: 0.875rem;
   line-height: 1.55;
@@ -222,6 +228,7 @@
   padding: 0.6rem 0.75rem;
   border-top: 1px solid var(--color-border, #d0d7de);
   background: var(--color-background-primary, #fff);
+  color: var(--color-foreground-primary, #24292f);
   resize: vertical;
 }
 
@@ -239,6 +246,7 @@
   overflow: visible !important;
   font-size: 0.85rem !important;
   line-height: 1.55 !important;
+  color: inherit !important;
 }
 
 .pyodide-stdout,
@@ -248,7 +256,7 @@
   word-break: break-word;
   font-family: inherit;
   font-size: 0.85rem;
-  color: var(--color-foreground-primary, #1f2328);
+  color: var(--color-foreground-primary, #24292f);
 }
 
 .pyodide-stderr {
@@ -285,10 +293,19 @@
   border-radius: 4px;
 }
 
-/* ── Dark mode support ────────────────────────────────────────────────────── */
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   DARK MODE — triggered by book-theme toggling html.dark
+   Every element that uses a colour is overridden here so switching
+   light <-> dark is fully reversible.
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Wrapper / layout ─────────────────────────────────────────────────────── */
 html.dark .pyodide-wrapper {
   border-color: #30363d;
   background: #0d1117;
+  color: #c9d1d9;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 html.dark .pyodide-header,
@@ -299,6 +316,14 @@ html.dark .pyodide-status-bar {
 
 html.dark .pyodide-lang-badge { color: #8b949e; }
 
+/* ── Buttons — dark ───────────────────────────────────────────────────────── */
+html.dark .pyodide-btn-run {
+  background: #238636;
+  border-color: rgba(240, 246, 252, 0.1);
+}
+html.dark .pyodide-btn-run:hover:not(:disabled) { background: #2ea043; }
+html.dark .pyodide-btn-run:active:not(:disabled) { background: #238636; }
+
 html.dark .pyodide-btn-clear {
   background: #21262d;
   color: #c9d1d9;
@@ -308,8 +333,10 @@ html.dark .pyodide-btn-clear:hover:not(:disabled) { background: #30363d; }
 
 html.dark .pyodide-btn-runall {
   background: #1f6feb;
+  border-color: rgba(240, 246, 252, 0.1);
 }
 html.dark .pyodide-btn-runall:hover:not(:disabled) { background: #388bfd; }
+html.dark .pyodide-btn-runall:active:not(:disabled) { background: #1f6feb; }
 
 html.dark .pyodide-btn-restart {
   background: #21262d;
@@ -321,6 +348,7 @@ html.dark .pyodide-btn-restart:hover:not(:disabled) {
   border-color: #f85149;
 }
 
+/* ── CodeMirror — DARK ────────────────────────────────────────────────────── */
 html.dark .CodeMirror.cm-s-pyodide-theme {
   background: #0d1117;
   color: #c9d1d9;
@@ -332,23 +360,51 @@ html.dark .cm-s-pyodide-theme .CodeMirror-gutters {
   color: #484f58;
 }
 
-html.dark .cm-s-pyodide-theme .CodeMirror-cursor { border-left-color: #58a6ff; }
-html.dark .cm-s-pyodide-theme .CodeMirror-selected { background: #1f3757; }
-html.dark .cm-s-pyodide-theme .cm-keyword   { color: #ff7b72; }
-html.dark .cm-s-pyodide-theme .cm-def       { color: #79c0ff; }
-html.dark .cm-s-pyodide-theme .cm-string,
-html.dark .cm-s-pyodide-theme .cm-string-2  { color: #a5d6ff; }
-html.dark .cm-s-pyodide-theme .cm-number    { color: #a5d6ff; }
-html.dark .cm-s-pyodide-theme .cm-comment   { color: #8b949e; }
-html.dark .cm-s-pyodide-theme .cm-operator  { color: #ff7b72; }
-html.dark .cm-s-pyodide-theme .cm-builtin   { color: #d2a8ff; }
-html.dark .cm-s-pyodide-theme .cm-atom,
-html.dark .cm-s-pyodide-theme .cm-variable-2 { color: #79c0ff; }
+html.dark .cm-s-pyodide-theme .CodeMirror-linenumber { color: #484f58; }
+html.dark .cm-s-pyodide-theme .CodeMirror-cursor     { border-left-color: #58a6ff; }
+html.dark .cm-s-pyodide-theme .CodeMirror-selected   { background: #1f3757; }
 
-html.dark .pyodide-fallback-textarea { background: #0d1117; color: #c9d1d9; }
+/* Syntax — dark (GitHub-dark-inspired, all high-contrast on #0d1117) */
+html.dark .cm-s-pyodide-theme .cm-keyword        { color: #ff7b72; font-weight: bold; }
+html.dark .cm-s-pyodide-theme .cm-def            { color: #d2a8ff; }
+html.dark .cm-s-pyodide-theme .cm-variable       { color: #c9d1d9; }
+html.dark .cm-s-pyodide-theme .cm-variable-2     { color: #79c0ff; }
+html.dark .cm-s-pyodide-theme .cm-string         { color: #a5d6ff; }
+html.dark .cm-s-pyodide-theme .cm-string-2       { color: #a5d6ff; }
+html.dark .cm-s-pyodide-theme .cm-number         { color: #79c0ff; }
+html.dark .cm-s-pyodide-theme .cm-comment        { color: #8b949e; font-style: italic; }
+html.dark .cm-s-pyodide-theme .cm-operator       { color: #ff7b72; }
+html.dark .cm-s-pyodide-theme .cm-builtin        { color: #d2a8ff; }
+html.dark .cm-s-pyodide-theme .cm-atom           { color: #79c0ff; }
+html.dark .cm-s-pyodide-theme .cm-meta           { color: #8b949e; }
+html.dark .cm-s-pyodide-theme .cm-bracket        { color: #c9d1d9; }
+html.dark .cm-s-pyodide-theme .cm-property       { color: #79c0ff; }
+html.dark .cm-s-pyodide-theme .cm-tag            { color: #7ee787; }
+html.dark .cm-s-pyodide-theme .cm-attribute      { color: #79c0ff; }
+html.dark .cm-s-pyodide-theme .cm-matchhighlight { background: #3b2e00; }
+html.dark .cm-s-pyodide-theme .CodeMirror-matchingbracket { color: #c9d1d9; background: #2ea04366; }
 
-html.dark .pyodide-output { background: #0d1117; border-color: #30363d; }
+/* ── Fallback textarea — dark ─────────────────────────────────────────────── */
+html.dark .pyodide-fallback-textarea {
+  background: #0d1117;
+  color: #c9d1d9;
+}
+
+/* ── Status — dark ────────────────────────────────────────────────────────── */
+html.dark .pyodide-status-text  { color: #8b949e; }
+html.dark .pyodide-status-info  { color: #58a6ff; }
+html.dark .pyodide-status-success { color: #3fb950; }
+html.dark .pyodide-status-error { color: #f85149; }
+html.dark .pyodide-timing       { color: #8b949e; }
+
+/* ── Output — dark ────────────────────────────────────────────────────────── */
+html.dark .pyodide-output {
+  background: #0d1117;
+  border-color: #30363d;
+  color: #c9d1d9;
+}
 html.dark .pyodide-output pre { color: #c9d1d9 !important; }
+
 html.dark .pyodide-stdout,
 html.dark .pyodide-return-value { color: #c9d1d9; }
 
@@ -359,8 +415,17 @@ html.dark .pyodide-stderr {
 }
 html.dark .pyodide-error {
   color: #ffa198;
-  background: #1e0a0a !important;
+  background: #2d1214 !important;
   border-left-color: #f85149;
+}
+
+/* ── Loading indicators — dark ────────────────────────────────────────────── */
+html.dark .pyodide-cell-react:not(.pyodide-wrapper) {
+  background: #161b22;
+  border-color: #30363d;
+}
+html.dark .pyodide-cell-react:not(.pyodide-wrapper)::before {
+  color: #58a6ff;
 }
 
 html.dark div.pyodide-cell:not([data-pyodide-transformed])::before {
@@ -369,97 +434,74 @@ html.dark div.pyodide-cell:not([data-pyodide-transformed])::before {
   color: #58a6ff;
 }
 
-/* Fallback: OS-level dark preference */
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   FALLBACK — OS-level dark preference (only when no explicit theme class)
+
+   This ONLY applies when <html> has neither .light nor .dark, i.e.
+   the brief window before the BlockingThemeLoader JS runs.  Once the JS
+   sets a class, these selectors no longer match, so they cannot conflict
+   with an explicit user choice.
+   ══════════════════════════════════════════════════════════════════════════════ */
 @media (prefers-color-scheme: dark) {
-  .pyodide-wrapper {
+  html:not(.light):not(.dark) .pyodide-wrapper {
     border-color: #30363d;
     background: #0d1117;
+    color: #c9d1d9;
   }
-  .pyodide-header,
-  .pyodide-status-bar {
+  html:not(.light):not(.dark) .pyodide-header,
+  html:not(.light):not(.dark) .pyodide-status-bar {
     background: #161b22;
     border-color: #30363d;
   }
-  .pyodide-lang-badge { color: #8b949e; }
-  .pyodide-btn-clear {
-    background: #21262d;
+  html:not(.light):not(.dark) .CodeMirror.cm-s-pyodide-theme {
+    background: #0d1117;
     color: #c9d1d9;
-    border-color: #30363d;
   }
-  .pyodide-btn-clear:hover:not(:disabled) { background: #30363d; }
-  .pyodide-btn-runall { background: #1f6feb; }
-  .pyodide-btn-runall:hover:not(:disabled) { background: #388bfd; }
-  .pyodide-btn-restart { background: #21262d; color: #f85149; border-color: #30363d; }
-  .pyodide-btn-restart:hover:not(:disabled) { background: #3b1d1d; border-color: #f85149; }
-  .CodeMirror.cm-s-pyodide-theme { background: #0d1117; color: #c9d1d9; }
-  .cm-s-pyodide-theme .CodeMirror-gutters {
+  html:not(.light):not(.dark) .cm-s-pyodide-theme .CodeMirror-gutters {
     background: #161b22;
     border-color: #30363d;
     color: #484f58;
   }
-  .cm-s-pyodide-theme .CodeMirror-cursor { border-left-color: #58a6ff; }
-  .cm-s-pyodide-theme .CodeMirror-selected { background: #1f3757; }
-  .cm-s-pyodide-theme .cm-keyword   { color: #ff7b72; }
-  .cm-s-pyodide-theme .cm-def       { color: #79c0ff; }
-  .cm-s-pyodide-theme .cm-string    { color: #a5d6ff; }
-  .cm-s-pyodide-theme .cm-string-2  { color: #a5d6ff; }
-  .cm-s-pyodide-theme .cm-number    { color: #a5d6ff; }
-  .cm-s-pyodide-theme .cm-comment   { color: #8b949e; }
-  .cm-s-pyodide-theme .cm-operator  { color: #ff7b72; }
-  .cm-s-pyodide-theme .cm-builtin   { color: #d2a8ff; }
-  .cm-s-pyodide-theme .cm-atom      { color: #79c0ff; }
-  .cm-s-pyodide-theme .cm-variable-2 { color: #79c0ff; }
-  .pyodide-fallback-textarea { background: #0d1117; color: #c9d1d9; }
-  .pyodide-output { background: #0d1117; border-color: #30363d; }
-  .pyodide-output pre { color: #c9d1d9 !important; }
-  .pyodide-stdout,
-  .pyodide-return-value { color: #c9d1d9; }
-  .pyodide-stderr {
-    color: #e3b341;
-    background: #272115 !important;
-    border-left-color: #9e6a03;
+  html:not(.light):not(.dark) .pyodide-fallback-textarea {
+    background: #0d1117;
+    color: #c9d1d9;
   }
-  .pyodide-error {
-    color: #ffa198;
-    background: #1e0a0a !important;
-    border-left-color: #f85149;
-  }
-  div.pyodide-cell:not([data-pyodide-transformed])::before {
-    background: #161b22;
+  html:not(.light):not(.dark) .pyodide-output {
+    background: #0d1117;
     border-color: #30363d;
-    color: #58a6ff;
+    color: #c9d1d9;
   }
+  html:not(.light):not(.dark) .pyodide-stdout,
+  html:not(.light):not(.dark) .pyodide-return-value { color: #c9d1d9; }
 }
+
 
 /* ── Accessibility: focus ring ────────────────────────────────────────────── */
 .pyodide-btn:focus-visible {
   outline: 2px solid #0969da;
   outline-offset: 2px;
 }
+html.dark .pyodide-btn:focus-visible {
+  outline-color: #58a6ff;
+}
 
 /* ── Pre-transform: prevent FOUC ──────────────────────────────────────────── */
-/* Hide the MyST-rendered code block inside pyodide-cell BEFORE our JS
-   transforms it. This prevents the raw code + copy button from flashing
-   briefly, which causes visual "scatter" on page load. */
 div.pyodide-cell:not([data-pyodide-transformed]) {
   position: relative;
-  grid-column: body; /* explicit placement in article-grid */
+  grid-column: body;
 }
 
 div.pyodide-cell:not([data-pyodide-transformed]) > .myst-code,
 div.pyodide-cell:not([data-pyodide-transformed]) > div {
-  display: none !important; /* hide raw code/copy btn to prevent FOUC */
+  display: none !important;
 }
 
-/* Keep the placeholder hidden AFTER transform, even if React hydration
-   resets the inline style. CSS !important overrides React's reconciliation. */
 div.pyodide-cell[data-pyodide-transformed="done"] {
   display: none !important;
 }
 
 /* ── React component: loading state ───────────────────────────────────────── */
-/* The PyodideCellRenderer renders an empty div.pyodide-cell-react.
-   While JS hasn't initialized it yet, show a loading indicator. */
 .pyodide-cell-react:not(.pyodide-wrapper) {
   position: relative;
   min-height: 80px;
@@ -480,17 +522,8 @@ div.pyodide-cell[data-pyodide-transformed="done"] {
   animation: pyodide-pulse 1.5s ease-in-out infinite;
 }
 
-html.dark .pyodide-cell-react:not(.pyodide-wrapper) {
-  background: #161b22;
-  border-color: #30363d;
-}
-
-html.dark .pyodide-cell-react:not(.pyodide-wrapper)::before {
-  color: #58a6ff;
-}
-
 div.pyodide-cell:not([data-pyodide-transformed])::before {
-  content: '▶ Interactive Python — loading editor…';
+  content: '\25B6 Interactive Python \2014 loading editor\2026';
   display: block;
   padding: 0.6rem 0.75rem;
   background: #f0f6fc;
