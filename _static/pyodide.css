@@ -141,14 +141,14 @@
 
 /* ── CodeMirror colour theme (pyodide-theme) ──────────────────────────────── */
 .CodeMirror.cm-s-pyodide-theme {
-  background: #fafbfc;
-  color: #1f2328;
+  background: var(--color-background-primary, #fafbfc);
+  color: var(--color-foreground-primary, #1f2328);
 }
 
 .cm-s-pyodide-theme .CodeMirror-gutters {
-  background: #f0f1f3;
-  border-right: 1px solid #d0d7de;
-  color: #8c959f;
+  background: var(--color-background-secondary, #f0f1f3);
+  border-right: 1px solid var(--color-border, #d0d7de);
+  color: var(--color-foreground-muted, #8c959f);
 }
 
 .cm-s-pyodide-theme .CodeMirror-linenumber { color: #8c959f; }
@@ -177,7 +177,8 @@
   box-sizing: border-box;
   padding: 0.75rem;
   border: none;
-  background: #fafbfc;
+  background: var(--color-background-primary, #fafbfc);
+  color: var(--color-foreground-primary, #1f2328);
   font-family: inherit;
   font-size: 0.875rem;
   line-height: 1.55;

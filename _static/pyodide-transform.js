@@ -20,6 +20,8 @@
   // ── Cell counter for stable IDs ────────────────────────────────────────────
   var _cellIndex = 0;
 
+  // Store CodeMirror instances so we can refresh them on theme changes
+  window._pyodideCodeMirrors = window._pyodideCodeMirrors || [];
   // ── Pyodide loading state (shared across all cells) ────────────────────────
   var _pyodideLoadState = 'idle'; // 'idle' | 'loading' | 'ready' | 'error'
   var _pyodideLoadError = null;
@@ -255,6 +257,8 @@
           },
         });
         cm.setSize(null, null);
+        // register instance for theme-refresh handling
+        try { window._pyodideCodeMirrors.push(cm); } catch (e) { /* noop */ }
       } catch (err) {
         console.warn('[pyodide-transform] CodeMirror init failed:', err);
         cm = null;
@@ -690,6 +694,38 @@
       setTimeout(startTransformCycle, 600);
     }
   }
+
+  // Monitor theme changes on <html> and refresh CodeMirror instances so
+  // their styles reflow (this ensures the pyodide-theme CSS under
+  // `html.dark` takes effect immediately when user toggles theme).
+  (function watchThemeChanges() {
+    var root = document.documentElement;
+    if (!root || typeof MutationObserver === 'undefined') return;
+    var lastClass = root.className;
+    var observer = new MutationObserver(function (mutations) {
+      var cls = root.className;
+      if (cls === lastClass) return;
+      lastClass = cls;
+      try {
+        (window._pyodideCodeMirrors || []).forEach(function (cm) {
+          try {
+            // reapply theme option and refresh to force redraw
+            if (typeof cm.setOption === 'function') cm.setOption('theme', 'pyodide-theme');
+            if (typeof cm.refresh === 'function') cm.refresh();
+          } catch (e) { /* ignore individual failures */ }
+        });
+        // Also force a small reflow for elements that rely solely on CSS
+        document.querySelectorAll('.pyodide-output, .pyodide-fallback-textarea').forEach(function (el) {
+          // toggle a benign class to force repaint
+          el.classList.add('pyodide-theme-refresh');
+          setTimeout(function () { el.classList.remove('pyodide-theme-refresh'); }, 50);
+        });
+      } catch (err) {
+        console.warn('[pyodide-transform] theme refresh failed', err);
+      }
+    });
+    observer.observe(root, { attributes: true, attributeFilter: ['class'] });
+  })();
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', boot);
