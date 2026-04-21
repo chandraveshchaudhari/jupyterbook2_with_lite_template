@@ -32,7 +32,7 @@ This template is built using **JupyterBook v2 (MyST)** and includes **interactiv
 It also features an **in-page code editor with syntax highlighting**, enabling users to edit and run code directly within the browser, even in offline or fully browser-based environments.
 
 
-**Live site:** <https://chandraveshchaudhari.github.io/jupyterbook2_with_lite_template/>
+**Live site:** <https://chandraveshchaudhari.github.io/jupyterbook2_with_lite_template/>   
 **Repository:** <https://github.com/chandraveshchaudhari/jupyterbook2_with_lite_template>
 
 
