@@ -28,6 +28,7 @@ A ready-to-use template for publishing notebook-based documentation on GitHub Pa
 ## Overview
 
 This is a **JupyterBook v2 (MyST)** template with **interactive Pyodide code cells** that run Python entirely in the browser via WebAssembly. No server is required — all code execution happens client-side on GitHub Pages.
+It also includes an **in-page editor with syntax highlighting**, so users can edit code directly on webpages and continue working in browser-only/offline scenarios.
 
 **Live site:** <https://chandraveshchaudhari.github.io/jupyterbook2_with_lite_template/>
 **Repository:** <https://github.com/chandraveshchaudhari/jupyterbook2_with_lite_template>
