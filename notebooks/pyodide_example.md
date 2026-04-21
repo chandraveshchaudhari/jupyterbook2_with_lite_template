@@ -2,6 +2,8 @@
 
 This page demonstrates interactive Pyodide cells using the `pyodide-cell` directive.
 Each cell runs Python directly in your browser via Pyodide — no server required.
+Cells on the same page **share the same Python kernel**, so variables defined
+in one cell are available in later cells.
 
 > **First run:** Pyodide initialises once (~5–10 seconds on first load,
 > subsequent cells on the same page run instantly).
@@ -88,29 +90,4 @@ axes[1].grid(alpha=0.3)
 
 plt.tight_layout()
 plt.show()
-:::
-
----
-
-## Multi-cell shared state
-
-Cells on the same page **share the same Python kernel**, so variables defined
-in one cell are available in later cells.
-
-:::{pyodide-cell}
-:id: shared-a
-
-# Run this first
-shared_result = [n**2 for n in range(1, 8)]
-print("Squares:", shared_result)
-:::
-
-:::{pyodide-cell}
-:id: shared-b
-
-# Run this second — uses shared_result from the cell above
-import numpy as np
-arr = np.array(shared_result)
-print("Sum of squares:", arr.sum())
-print("Root mean square:", np.sqrt(np.mean(arr)))
 :::

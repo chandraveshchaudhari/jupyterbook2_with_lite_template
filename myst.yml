@@ -15,20 +15,11 @@ project:
     content: CC-BY-4.0
   # plugins: (disabled) - enable only after installing required Node dependencies
 
-  # ---------------------------------------------------------------------------
-  # Launch buttons
-  # ---------------------------------------------------------------------------
-  # Three launch options are provided:
-  #   ⚡ Power button  — jupyter.lite: true    → JupyterLite in-page execution (Pyodide/WASM)
-  #   🔵 Binder badge  — binder: <url>          → opens mybinder.org directly, visible on every page
-  #   🟠 Colab badge   — HTML img link           → added to each notebook's first cell
-  #   🚀 Rocket button — always present          → enter any JupyterHub/BinderHub URL manually
   jupyter:
     lite: true
     # binder:                                    # configures the ⚡ power button's Binder backend
     #   repo: chandraveshchaudhari/jupyterbook2_with_lite_template
     #   ref: main
-  # Direct Binder badge (🔵) — shown on every page as a clickable badge, no dialog.
   # Update with your own GitHub username and repo name.
   binder: https://mybinder.org/v2/gh/chandraveshchaudhari/jupyterbook2_with_lite_template/HEAD
 
@@ -49,14 +40,12 @@ project:
     - title: Getting Started
       children:
         - file: notebooks/adding_contents.ipynb
-    - title: Pyodide Examples
-      children:
-        - file: notebooks/pyodide_example.md
-        - file: notebooks/pyodide_usage.md
+
     - title: Features & Showcase
       children:
         - file: notebooks/features.ipynb
         - file: notebooks/section_markdown_page.md
+        - file: notebooks/pyodide_example.md
 
 site:
   template: book-theme
@@ -66,6 +55,7 @@ site:
     folders: true          # generates clean /page/ URLs
     # logo_dark: media/images/banner_image_dark.png
     style: media/custom.css   # custom fonts, layout, fullscreen, scrollable output
-    base_url: /jupyterbook2_with_lite_template/ 
     # outline_maxdepth: 2          # right-side outline depth (keeps it concise)
     # hide_outline: true         # un-comment to fully hide the right outline
+    # hide_authors: true
+    # hide_title_block: true

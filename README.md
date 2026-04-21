@@ -25,6 +25,14 @@
 
 A ready-to-use template for publishing notebook-based documentation on GitHub Pages using **JupyterBook v2 (MyST)** with native JupyterLite launch buttons.
 
+## Overview
+
+This is a **JupyterBook v2 (MyST)** template with **interactive Pyodide code cells** that run Python entirely in the browser via WebAssembly. No server is required — all code execution happens client-side on GitHub Pages.
+
+**Live site:** <https://chandraveshchaudhari.github.io/jupyterbook2_with_lite_template/>
+**Repository:** <https://github.com/chandraveshchaudhari/jupyterbook2_with_lite_template>
+
+
 ## Quick Start
 
 1. Click **Use this template** (or fork this repository).

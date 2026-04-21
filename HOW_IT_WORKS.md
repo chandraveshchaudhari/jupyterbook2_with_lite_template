@@ -70,7 +70,6 @@ This is a **JupyterBook v2 (MyST)** template with **interactive Pyodide code cel
 │   ├── adding_contents.ipynb
 │   ├── features.ipynb
 │   ├── pyodide_example.md            ← Uses :::{pyodide-cell} directives
-│   ├── pyodide_usage.md
 │   └── section_markdown_page.md
 │
 ├── extensions/                       ← Utility scripts (not used in build pipeline)
