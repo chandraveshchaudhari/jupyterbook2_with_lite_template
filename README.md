@@ -1,4 +1,4 @@
-# JupyterBook v2 (MyST) + JupyterLite Template
+# Jupyter Book Template with Editable Pyodide Code Cells
 
 <p align="center">
 	<img src="media/images/banner_image.png" alt="Book banner" width="100%" />
